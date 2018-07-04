@@ -1,0 +1,37 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>net.engining.pcx.cc</groupId>
+		<artifactId>cc</artifactId>
+		<version>2.1.0-SNAPSHOT</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<artifactId>cc-batch-component</artifactId>
+	<name>Credit Core 批量任务组件</name>
+	<dependencies>
+		<dependency>
+			<groupId>net.engining.pcx.cc</groupId>
+			<artifactId>cc-dict</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.engining.pcx.cc</groupId>
+			<artifactId>cc-param-model</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.engining.pcx.cc</groupId>
+			<artifactId>cc-process-service-interface</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.engining.pcx.cc</groupId>
+			<artifactId>cc-process-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.engining.pg</groupId>
+			<artifactId>pg-batch-help</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</dependency>
+	</dependencies>
+</project>

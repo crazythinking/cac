@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<batch:step id="cc-0100-reject-entry" >
+		<batch:tasklet>
+			<batch:chunk reader="cc0100R" processor="cc0100P00"  commit-interval="#{env['batchCc0100Interval']?:100}" >
+				<batch:writer>
+					<bean class="net.engining.pg.batch.sdk.NullItemWriter"/>
+				</batch:writer>
+			</batch:chunk>
+		</batch:tasklet>
+	</batch:step>
+	
+<!-- 	<bean id="W0101RejectEntry" class="net.engining.pg.batch.PropertyDelegateWriter"> -->
+<!-- 		<property name="writers"> -->
+<!-- 			<map> -->
+<!-- 				<entry key="rptTxnItem"> -->
+<!-- 					<bean class="net.engining.pg.batch.PgFileItemWriter"> -->
+<!-- 						<property name="fileHeaderClass" value="net.engining.pg.batch.FileHeader"/> -->
+<!-- 						<property name="fileDetailClass" value="net.engining.pcx.cc.process.model.RptTxnItem"/> -->
+<!-- 						<property name="resource" ref="resS010001Rpt"/> -->
+<!-- 					</bean> -->
+<!-- 				</entry> -->
+<!-- 				<entry key="glTxnItemList"> -->
+<!-- 					<bean class="net.engining.pg.batch.PgFileItemWriter"> -->
+<!-- 						<property name="fileHeaderClass" value="net.engining.pg.batch.FileHeader"/> -->
+<!-- 						<property name="fileDetailClass" value="net.engining.pcx.cc.process.model.GlTxnItem"/> -->
+<!-- 						<property name="resource" ref="resS010002Gl"/> -->
+<!-- 					</bean> -->
+<!-- 				</entry> -->
+<!-- 			</map> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
+</beans>

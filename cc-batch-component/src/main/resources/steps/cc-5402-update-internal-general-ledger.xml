@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<bean id="cc5402R" class="net.engining.pcx.cc.batch.cc5402.Cc5402R" scope="step"/>
+	<bean id="cc5402P02" class="net.engining.pcx.cc.batch.cc5402.Cc5402P02BackupRemove" scope="step"/>
+	<bean id="cc5402W" class="net.engining.pcx.cc.batch.cc5402.Cc5402W" scope="step"/>
+
+	<batch:step id="cc-5402-update-internal-general-ledger" abstract="true">
+		<batch:tasklet>
+			<batch:chunk reader="cc5402R" processor="cc5402P02" writer="cc5402W" commit-interval="#{env['batchCc5402Interval']?:100}" />
+		</batch:tasklet>
+	</batch:step>
+	
+
+</beans>

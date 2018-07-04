@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>net.engining.pg</groupId>
+		<artifactId>pg-parent</artifactId>
+		<version>3.2.0-SNAPSHOT</version>
+	</parent>
+	
+	<groupId>net.engining.pcx.cc</groupId>
+	<artifactId>cc</artifactId>
+	<name>Credit Core :  账务核心</name>
+	<packaging>pom</packaging>
+	<version>2.1.0-SNAPSHOT</version>
+	
+	<properties>
+		<cc.version>2.1.0-SNAPSHOT</cc.version>
+		<gm.version>1.2.0-SNAPSHOT</gm.version>
+	</properties>
+	
+	<modules>
+		<module>cc-param-model</module>
+		<module>cc-dict</module>
+		<module>cc-process-service-interface</module>
+		<module>cc-process-service</module>
+		<module>cc-batch-component</module>
+	</modules>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>net.engining.gm</groupId>
+				<artifactId>gm-parent</artifactId>
+				<version>${gm.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>net.engining.pcx.cc</groupId>
+				<artifactId>cc-param-model</artifactId>
+				<version>${cc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.engining.pcx.cc</groupId>
+				<artifactId>cc-dict</artifactId>
+				<version>${cc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.engining.pcx.cc</groupId>
+				<artifactId>cc-batch-component</artifactId>
+				<version>${cc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.engining.pcx.cc</groupId>
+				<artifactId>cc-process-service-interface</artifactId>
+				<version>${cc.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.engining.pcx.cc</groupId>
+				<artifactId>cc-process-service</artifactId>
+				<version>${cc.version}</version>
+			</dependency>
+			
+		</dependencies>
+	</dependencyManagement>
+	<dependencies>
+		<dependency>
+		    <groupId>com.alibaba</groupId>
+		    <artifactId>fastjson</artifactId>
+		    <version>1.2.6</version>
+		</dependency>
+		<!-- spring boot log4j -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
+		</dependency>
+	</dependencies>
+</project>

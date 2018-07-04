@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<batch:step id="cc-1800-posting">
+		<batch:tasklet>
+			<batch:chunk reader="cc1800R" commit-interval="#{env['batchCc1800Interval']?:100}" >
+				<batch:processor>
+					<bean class="org.springframework.batch.item.support.CompositeItemProcessor">
+						<property name="delegates">
+							<list>
+								<ref bean="cc1800P00OrganizationSetup"/>
+				 				<ref bean="cc1800P04AccountClean"/>
+								<ref bean="cc1800P10TransactionPosting"/>
+				  				<ref bean="cc1800P15MoveDue"/>
+				  				<ref bean="cc1800P16UpdateAgeCode"/>  
+								<ref bean="cc1800P22InterestAccrualCurr"/>
+								<ref bean="cc1800P25InterestCheckWaive"/>
+								<ref bean="cc1800P28GenerateOverLimitFee"/>
+								<ref bean="cc1800P31GenerateLateChargeFee"/>
+								<ref bean="cc1800P35InterestStatement"/>
+								<ref bean="cc1800P365AutoRepay"/>
+								<ref bean="cc1800P40ComputeDue"/>
+								<!-- 如果账龄提升日是账单日的情况下，账龄需要在两个步骤之后都执行一次 -->
+								<ref bean="cc1800P16UpdateAgeCode"/>  
+								<ref bean="cc1800P43GenerateStatement"/>
+								<ref bean="cc1800P366Loanfee"/>
+								<ref bean="cc1800P64UpdateAccountAndPlan"/>
+								<ref bean="cc1800P67UpdateMasterData"/>
+								<ref bean="cc1800P70DeleteInvalidLoanAccount"/>
+<!-- 								<ref bean="cc1800P90GenerateApGlTxn"/>			 -->
+							</list>
+						</property>
+					</bean>
+				</batch:processor>
+				<batch:writer>
+					<bean class="net.engining.pg.batch.sdk.NullItemWriter"/>
+				</batch:writer>
+			</batch:chunk>
+		</batch:tasklet>
+	</batch:step>
+
+	<!-- FIXME 增加输出步骤以及改正batchNumber -->
+	
+	<!-- 约定还款扣款文件 -->
+<!-- 	<bean id="ddRequestItemList" class="net.engining.pg.batch.PgFileFacilityWriter" scope="step"> -->
+<!-- 		<property name="fileDetailClass" value="net.engining.pcx.cc.file.model.DdRequestInterfaceItem"/> -->
+<!-- 		<property name="filename" value="S600001DdRequestItemList"/> -->
+<!-- 		<property name="batchNumber" value="xxx"/> -->
+<!-- 	</bean> -->
+	<!-- 催收接口文件 -->
+<!-- 	<bean id="collectionItem" class="net.engining.pg.batch.PgFileFacilityWriter" scope="step"> -->
+<!-- 		<property name="charset" value="GBK"/> -->
+<!-- 		<property name="fileDetailClass" value="net.engining.pcx.cc.file.model.CollectionItem"/> -->
+<!-- 		<property name="filename" value="S600002CollectionItem"/> -->
+<!-- 		<property name="batchNumber" value="xxx"/> -->
+<!-- 	</bean> -->
+	<!-- 账单统计信息文件 -->
+<!-- 	<bean id="stmt" class="net.engining.pg.batch.PgFileFacilityWriter" scope="step"> -->
+<!-- 		<property name="fileDetailClass" value="net.engining.pcx.cc.file.model.StmtInterfaceItem"/> -->
+<!-- 		<property name="filename" value="S600003Stmt"/> -->
+<!-- 		<property name="batchNumber" value="xxx"/> -->
+<!-- 	</bean> -->
+	<!-- 总账交易流水文件 -->
+<!-- 	<bean id="glTxnItemList" class="net.engining.pg.batch.PgFileFacilityWriter" scope="step"> -->
+<!-- 		<property name="fileDetailClass" value="net.engining.pcx.cc.process.model.GlTxnItem"/> -->
+<!-- 		<property name="filename" value="S600004Gl"/> -->
+<!-- 		<property name="batchNumber" value="xxx"/> -->
+<!-- 	</bean> -->
+	<!-- 当日交易流水报表 -->
+<!-- 	<bean id="txnJournal" class="net.engining.pg.batch.PgFileFacilityWriter" scope="step"> -->
+<!-- 		<property name="fileDetailClass" value="net.engining.pcx.cc.file.model.TxnJournalRptItem"/> -->
+<!-- 		<property name="filename" value="S600006TxnJournal"/> -->
+<!-- 		<property name="batchNumber" value="xxx"/> -->
+<!-- 	</bean> -->
+	<!-- 当日挂账交易流水报表 -->
+<!-- 	<bean id="rejectTxnJournal" class="net.engining.pg.batch.PgFileFacilityWriter" scope="step"> -->
+<!-- 		<property name="fileDetailClass" value="net.engining.pcx.cc.file.model.RejectTxnJournalRptItem"/> -->
+<!-- 		<property name="filename" value="S600007RejectTxnJournal"/> -->
+<!-- 		<property name="batchNumber" value="xxx"/> -->
+<!-- 	</bean> -->
+	<!-- 分期XFR报表 -->
+<!-- 	<bean id="loanXfr" class="net.engining.pg.batch.PgFileFacilityWriter" scope="step"> -->
+<!-- 		<property name="fileDetailClass" value="net.engining.pcx.cc.file.model.LoanXfrRptItem"/> -->
+<!-- 		<property name="filename" value="S600013LoanXfr"/> -->
+<!-- 		<property name="batchNumber" value="xxx"/> -->
+<!-- 	</bean> -->
+	<!-- 分户账汇总信息文件 -->
+<!-- 	<bean id="subAcctSum" class="net.engining.pg.batch.PgFileFacilityWriter" scope="step"> -->
+<!-- 		<property name="fileDetailClass" value="net.engining.pcx.cc.file.model.SubAcctSumItem"/> -->
+<!-- 		<property name="filename" value="S600014PlanBnpSum"/> -->
+<!-- 		<property name="batchNumber" value="xxx"/> -->
+<!-- 	</bean> -->
+<!-- 	<bean id="W6001Account" class="net.engining.pg.batch.PropertyDelegateWriter"> -->
+<!-- 	    <property name="writers"> -->
+<!-- 	    	<map> -->
+<!-- 	    		<entry key="ddRequestItemList" value-ref="ddRequestItemList"/> -->
+<!-- 	    		<entry key="collectionItems" value-ref="collectionItem"/> -->
+<!-- 	    		<entry key="stmt" value-ref="stmt"/> -->
+<!-- 	    		<entry key="glTxnItemList" value-ref="glTxnItemList"/> -->
+<!-- 	    		<entry key="txnJournals" value-ref="txnJournal"/> -->
+<!-- 	    		<entry key="rejectTxnJournals" value-ref="rejectTxnJournal"/> -->
+<!-- 	    		<entry key="loanXfrs" value-ref="loanXfr"/> -->
+<!-- 	    		<entry key="subAcctSums" value-ref="subAcctSum"/> -->
+<!-- 	    	</map> -->
+<!-- 	    </property> -->
+<!-- 	</bean> -->
+</beans>

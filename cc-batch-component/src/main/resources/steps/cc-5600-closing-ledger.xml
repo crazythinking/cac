@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<bean id="cc5600R" class="net.engining.pcx.cc.batch.cc5600.Cc5600R" scope="step"/>
+	<bean id="cc5600P01" class="net.engining.pcx.cc.batch.cc5600.Cc5600P01Backup" scope="step"/>
+	<bean id="cc5600P60" class="net.engining.pcx.cc.batch.cc5600.Cc5600P60DailyInit" scope="step"/>
+
+	<batch:step id="cc-5600-closing-ledger" abstract="true">
+		<batch:tasklet>
+			<batch:chunk reader="cc5600R" commit-interval="#{env['batchCc5600Interval']?:500}" >
+				<batch:processor>
+					<bean class="org.springframework.batch.item.support.CompositeItemProcessor">
+						<property name="delegates">
+							<list>
+								<ref bean="cc5600P01"/>
+								<ref bean="cc5600P60"/>
+							</list>
+						</property>
+					</bean>
+				</batch:processor>
+				<batch:writer>
+					<bean class="net.engining.pg.batch.sdk.NullItemWriter"/>
+				</batch:writer>
+			</batch:chunk>
+		</batch:tasklet>
+	</batch:step>
+	
+
+</beans>

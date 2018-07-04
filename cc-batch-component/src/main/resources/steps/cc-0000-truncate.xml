@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<!-- 批前清表 -->
+
+	<batch:step id="cc-0000-truncate" abstract="true">
+		<batch:tasklet>
+			<bean class="net.engining.pg.batch.sdk.TableTruncateTasklet">
+				<property name="database" value="#{env['database']?: 'H2'}"/>
+				<property name="entities">
+					<list>
+						<value>net.engining.pcx.cc.infrastructure.shared.model.CactIntrnlTxnPostSum</value> 
+						<value>net.engining.pcx.cc.infrastructure.shared.model.ApSubjectSummary</value>
+					</list>
+				</property>
+			</bean>
+		</batch:tasklet>
+	</batch:step>
+</beans>

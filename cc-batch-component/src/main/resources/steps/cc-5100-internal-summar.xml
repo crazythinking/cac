@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
+
+	<bean id="cc5100R" class="net.engining.pcx.cc.batch.cc5100.Cc5100R" scope="step"/>
+	
+	<bean id="cc5100W" class="net.engining.pcx.cc.batch.cc5100.Cc5100W" scope="step"/>
+
+	<batch:step id="cc-5100-internal-summar" abstract="true">
+		<batch:tasklet>
+			<batch:chunk reader="cc5100R"  writer="cc5100W" commit-interval="#{env['batchCc5100Interval']?:1000}" />
+		</batch:tasklet>
+	</batch:step>
+
+</beans>
