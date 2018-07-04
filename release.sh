@@ -11,5 +11,5 @@ sed -i "s/2.1.0-SNAPSHOT/2.1.0.RELEASE/g" pom.xml */pom.xml */*/pom.xml
 # 重新checkout到master
 
 # 将master提升版本号
-sed -i "s/3.0.0.RELEASE/3.1.0-SNAPSHOT/g" pom.xml */pom.xml */*/pom.xml
+sed -i "s/2.1.0.RELEASE/2.1.1-SNAPSHOT/g" pom.xml */pom.xml */*/pom.xml
 
