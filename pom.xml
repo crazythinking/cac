@@ -11,10 +11,10 @@
 	<artifactId>cc</artifactId>
 	<name>Credit Core :  账务核心</name>
 	<packaging>pom</packaging>
-	<version>2.2.0-SNAPSHOT</version>
+	<version>2.1.1-SNAPSHOT</version>
 	
 	<properties>
-		<cc.version>2.2.0-SNAPSHOT</cc.version>
+		<cc.version>2.1.1-SNAPSHOT</cc.version>
 		<gm.version>1.2.0-SNAPSHOT</gm.version>
 	</properties>
 	
