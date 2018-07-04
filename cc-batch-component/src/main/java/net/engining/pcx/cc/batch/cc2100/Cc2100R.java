@@ -10,12 +10,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.pcx.cc.infrastructure.shared.model.CactTxnHst;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactTxnHst;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * TmTxnHst对象读取, 条件是查询当天入账的交易
@@ -24,7 +23,7 @@ import net.engining.pg.batch.sdk.KeyBasedStreamReader;
  */
 @Service
 @Scope("step")
-public class Cc2100R extends KeyBasedStreamReader<Integer, CactTxnHst> {
+public class Cc2100R extends AbstractKeyBasedStreamReader<Integer, CactTxnHst> {
 
 	@PersistenceContext
 	private EntityManager em;

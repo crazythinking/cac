@@ -11,7 +11,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.pcx.cc.infrastructure.shared.model.CactCancelReg;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactCancelReg;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 
 /**
@@ -21,7 +21,7 @@ import net.engining.pg.batch.sdk.KeyBasedStreamReader;
  * 
  */
 @Service
-public class Cc1400R extends KeyBasedStreamReader<Integer, CactCancelReg> {
+public class Cc1400R extends AbstractKeyBasedStreamReader<Integer, CactCancelReg> {
 
 	@PersistenceContext
 	protected EntityManager em;

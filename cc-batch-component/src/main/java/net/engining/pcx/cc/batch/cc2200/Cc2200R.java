@@ -16,7 +16,7 @@ import net.engining.gm.facility.SystemStatusFacility;
 import net.engining.gm.param.model.SystemStatus;
 import net.engining.pcx.cc.infrastructure.shared.model.CactReprintReg;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactReprintReg;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * TmReprintReg对象读取
@@ -25,7 +25,7 @@ import net.engining.pg.batch.sdk.KeyBasedStreamReader;
  */
 @Service
 @Scope("step")
-public class Cc2200R extends KeyBasedStreamReader<Integer, CactReprintReg> {
+public class Cc2200R extends AbstractKeyBasedStreamReader<Integer, CactReprintReg> {
 	
 	@Autowired
 	private SystemStatusFacility systemStatusFacility;

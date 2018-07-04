@@ -8,19 +8,18 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Value;
 
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.pcx.cc.infrastructure.shared.model.ApInternalGltxn;
 import net.engining.pcx.cc.infrastructure.shared.model.QApInternalGltxn;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * ApInternalGltxn对象读取，无状态Reader
  * 
  * @author hu
  */
-public class Cc5402R extends KeyBasedStreamReader<Integer, ApInternalGltxn> {
+public class Cc5402R extends AbstractKeyBasedStreamReader<Integer, ApInternalGltxn> {
 	
 	@PersistenceContext
 	private EntityManager em;

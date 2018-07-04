@@ -13,7 +13,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import net.engining.pcx.cc.infrastructure.shared.enums.TxnStatusDef;
 import net.engining.pcx.cc.infrastructure.shared.model.AuthUnmatch;
 import net.engining.pcx.cc.infrastructure.shared.model.QAuthUnmatch;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * 根据条件删除AuthUnmatch中的反向交易
@@ -23,7 +23,7 @@ import net.engining.pg.batch.sdk.KeyBasedStreamReader;
  */
 @Service
 @Scope("step")
-public class Cc3200R extends KeyBasedStreamReader<Integer, AuthUnmatch> {
+public class Cc3200R extends AbstractKeyBasedStreamReader<Integer, AuthUnmatch> {
 
 	@PersistenceContext
 	private EntityManager em;

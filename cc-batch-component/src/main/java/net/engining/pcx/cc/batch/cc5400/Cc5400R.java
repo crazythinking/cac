@@ -12,14 +12,14 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.pcx.cc.infrastructure.shared.model.ApGlTxn;
 import net.engining.pcx.cc.infrastructure.shared.model.QApGlTxn;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * ApGltxn对象读取，无状态Reader
  * 
  * @author jiangfan
  */
-public class Cc5400R extends KeyBasedStreamReader<String, ApGlTxn> {
+public class Cc5400R extends AbstractKeyBasedStreamReader<String, ApGlTxn> {
 	
 	@PersistenceContext
 	private EntityManager em;

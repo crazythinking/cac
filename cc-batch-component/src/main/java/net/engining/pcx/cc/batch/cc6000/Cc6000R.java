@@ -17,7 +17,7 @@ import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactAgeDue;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactSubAcct;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactTxnPost;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * 
@@ -26,7 +26,7 @@ import net.engining.pg.batch.sdk.KeyBasedStreamReader;
  * @author Li Yinxia
  *
  */
-public class Cc6000R extends KeyBasedStreamReader<Integer, Cc6000IAccountInfo> {
+public class Cc6000R extends AbstractKeyBasedStreamReader<Integer, Cc6000IAccountInfo> {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 

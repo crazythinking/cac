@@ -17,7 +17,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import net.engining.pcx.cc.infrastructure.shared.model.CactStmtHst;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactStmtHst;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactTxnUnstmt;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * 未出账单信息reader
@@ -31,7 +31,7 @@ import net.engining.pg.batch.sdk.KeyBasedStreamReader;
  */
 @Service
 @Scope("step")
-public class Cc1900R extends KeyBasedStreamReader<CactStmtKey, Cc1900I> {
+public class Cc1900R extends AbstractKeyBasedStreamReader<CactStmtKey, Cc1900I> {
 	@PersistenceContext
 	private EntityManager em;
 

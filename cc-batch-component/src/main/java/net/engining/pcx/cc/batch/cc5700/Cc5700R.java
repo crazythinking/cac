@@ -9,13 +9,13 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactAccount;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * 单笔利率调整（为后续利率变更做准备）
  * @author tuyi
  */
-public class Cc5700R extends KeyBasedStreamReader<Integer, CactAccount> {
+public class Cc5700R extends AbstractKeyBasedStreamReader<Integer, CactAccount> {
 	
 	@PersistenceContext
 	private EntityManager em;

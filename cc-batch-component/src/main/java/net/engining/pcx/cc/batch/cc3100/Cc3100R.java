@@ -16,7 +16,7 @@ import net.engining.gm.facility.SystemStatusFacility;
 import net.engining.gm.param.model.SystemStatus;
 import net.engining.pcx.cc.infrastructure.shared.model.AuthUnmatch;
 import net.engining.pcx.cc.infrastructure.shared.model.QAuthUnmatch;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * 备份前一天到当天的数据到AuthHst
@@ -26,7 +26,7 @@ import net.engining.pg.batch.sdk.KeyBasedStreamReader;
  */
 @Service
 @Scope("step")
-public class Cc3100R extends KeyBasedStreamReader<Integer, AuthUnmatch> {
+public class Cc3100R extends AbstractKeyBasedStreamReader<Integer, AuthUnmatch> {
 	@Autowired
 	private SystemStatusFacility systemStatusfacility;
 

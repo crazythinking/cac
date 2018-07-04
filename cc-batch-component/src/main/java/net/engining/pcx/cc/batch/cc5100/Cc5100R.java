@@ -13,13 +13,13 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag4InternalAcct;
 import net.engining.pcx.cc.infrastructure.shared.model.CactIntrnlTxnPostBt;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactIntrnlTxnPostBt;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * CactInternalTxnPost4Batch对象读取
  * 
  */
-public class Cc5100R extends KeyBasedStreamReader<Integer, CactIntrnlTxnPostBt> {
+public class Cc5100R extends AbstractKeyBasedStreamReader<Integer, CactIntrnlTxnPostBt> {
 	@PersistenceContext
 	protected EntityManager em;
 

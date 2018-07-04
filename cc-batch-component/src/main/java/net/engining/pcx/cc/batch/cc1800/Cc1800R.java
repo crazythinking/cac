@@ -22,9 +22,9 @@ import net.engining.pcx.cc.infrastructure.shared.model.QCactAgeDue;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactSubAcct;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactTxnPost;
 import net.engining.pcx.cc.process.model.AcctModel;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
-public class Cc1800R extends KeyBasedStreamReader<String, Cc1800IPostingInfo> {
+public class Cc1800R extends AbstractKeyBasedStreamReader<String, Cc1800IPostingInfo> {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 

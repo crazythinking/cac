@@ -9,9 +9,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.pcx.cc.infrastructure.shared.model.ApInternalSubjectSum;
 import net.engining.pcx.cc.infrastructure.shared.model.QApInternalSubjectSum;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
-public class Cc5403R extends KeyBasedStreamReader<Integer, ApInternalSubjectSum> {
+public class Cc5403R extends AbstractKeyBasedStreamReader<Integer, ApInternalSubjectSum> {
 
 	@PersistenceContext
 	private EntityManager em;

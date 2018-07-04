@@ -9,12 +9,12 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.pcx.cc.infrastructure.shared.model.ApGlBal;
 import net.engining.pcx.cc.infrastructure.shared.model.QApGlBal;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
 /**
  * @author yinxia
  */
-public class Cc5600R extends KeyBasedStreamReader<Integer, ApGlBal> {
+public class Cc5600R extends AbstractKeyBasedStreamReader<Integer, ApGlBal> {
 	
 	@PersistenceContext
 	private EntityManager em;

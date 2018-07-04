@@ -9,9 +9,9 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.pcx.cc.infrastructure.shared.model.ApSubjectSummary;
 import net.engining.pcx.cc.infrastructure.shared.model.QApSubjectSummary;
-import net.engining.pg.batch.sdk.KeyBasedStreamReader;
+import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
-public class Cc5401R extends KeyBasedStreamReader<Integer, ApSubjectSummary> {
+public class Cc5401R extends AbstractKeyBasedStreamReader<Integer, ApSubjectSummary> {
 
 	@PersistenceContext
 	private EntityManager em;
