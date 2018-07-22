@@ -9,7 +9,13 @@ sed -i "s/2.1.0-SNAPSHOT/2.1.0.RELEASE/g" pom.xml */pom.xml */*/pom.xml
 # 创建相应版本的RELEASE tag
 
 # 重新checkout到master
-
+git checkout master
 # 将master提升版本号
 sed -i "s/2.1.0.RELEASE/2.1.1-SNAPSHOT/g" pom.xml */pom.xml */*/pom.xml
+# 添加所有修改的内容
+git add .
+# 提交本地master分支
+git commit -m '切换到2.1.1-SNAPSHOT'
+# 提交到远程master分支
+git push origin master
 
