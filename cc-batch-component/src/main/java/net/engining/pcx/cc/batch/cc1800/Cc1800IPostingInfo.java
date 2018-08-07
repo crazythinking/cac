@@ -4,11 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.engining.pcx.cc.process.model.AcctModel;
-
-import org.springframework.stereotype.Service;
-
 import com.google.common.collect.Maps;
+
+import net.engining.pcx.cc.process.model.AcctModel;
 
 /**
  * cc1800 核心入账相关信息模型<br>
@@ -19,7 +17,6 @@ import com.google.common.collect.Maps;
  * @author luxue
  *
  */
-@Service
 public class Cc1800IPostingInfo {
 	/**
 	 * Key:Integer-AcctNo;

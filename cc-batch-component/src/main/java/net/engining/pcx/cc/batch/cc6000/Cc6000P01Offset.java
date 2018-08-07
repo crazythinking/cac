@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.joda.time.LocalDate;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -31,7 +32,7 @@ import net.engining.pg.parameter.ParameterFacility;
  * 
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc6000P01Offset implements ItemProcessor<Cc6000IAccountInfo, Cc6000IAccountInfo> {
 	
 	/**

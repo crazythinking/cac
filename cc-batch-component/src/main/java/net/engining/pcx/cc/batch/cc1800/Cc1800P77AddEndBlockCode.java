@@ -9,14 +9,12 @@ import javax.persistence.PersistenceContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
-import net.engining.pg.parameter.ParameterFacility;
 
  
 /**
@@ -24,7 +22,7 @@ import net.engining.pg.parameter.ParameterFacility;
  *对贷款已结清的贷款，上锁定码
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P77AddEndBlockCode implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	

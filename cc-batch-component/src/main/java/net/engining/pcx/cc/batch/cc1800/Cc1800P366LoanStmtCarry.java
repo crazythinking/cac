@@ -12,11 +12,11 @@ import javax.persistence.PersistenceContext;
 
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import net.engining.gm.infrastructure.enums.AgeGroupCd;
@@ -26,15 +26,9 @@ import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
 import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
 import net.engining.pcx.cc.param.model.Account;
 import net.engining.pcx.cc.param.model.enums.TransformType;
-import net.engining.pcx.cc.process.service.PaymentPlanService;
 import net.engining.pcx.cc.process.service.account.NewAgeService;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
-import net.engining.pcx.cc.process.service.account.NewPostService;
-import net.engining.pcx.cc.process.service.impl.InternalAccountService;
-import net.engining.pcx.cc.process.service.ledger.NewLedgerService;
 import net.engining.pcx.cc.process.service.support.LoanTransformEvent;
-import net.engining.pcx.cc.process.service.support.Provider7x24;
-import net.engining.pg.parameter.ParameterFacility;
 
 
 /**
@@ -42,7 +36,7 @@ import net.engining.pg.parameter.ParameterFacility;
  *
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P366LoanStmtCarry implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
 
 	@PersistenceContext

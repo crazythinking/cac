@@ -4,27 +4,15 @@
 package net.engining.pcx.cc.batch.cc1800;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import net.engining.gm.facility.SystemStatusFacility;
-import net.engining.gm.param.model.OrganizationInfo;
-import net.engining.gm.param.model.SystemStatus;
-import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
-import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
-import net.engining.pcx.cc.infrastructure.shared.model.CactTxnPost;
-import net.engining.pcx.cc.param.model.Account;
-import net.engining.pcx.cc.param.model.enums.ChargeDateInd;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.common.BlockCodeUtils;
 import net.engining.pg.parameter.ParameterFacility;
@@ -34,7 +22,7 @@ import net.engining.pg.parameter.ParameterFacility;
  * 收取超限费
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P28GenerateOverLimitFee implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
 
 	Logger logger = LoggerFactory.getLogger(Cc1800P28GenerateOverLimitFee.class);

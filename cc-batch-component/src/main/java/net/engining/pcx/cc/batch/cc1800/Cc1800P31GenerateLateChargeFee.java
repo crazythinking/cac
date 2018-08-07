@@ -6,10 +6,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import net.engining.pcx.cc.infrastructure.shared.enums.PostTxnTypeDef;
@@ -33,7 +33,7 @@ import net.engining.pg.parameter.ParameterFacility;
  *
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P31GenerateLateChargeFee implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
 	
 	/**

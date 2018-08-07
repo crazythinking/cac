@@ -1,5 +1,6 @@
 package net.engining.pcx.cc.batch.cc6000;
 
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import net.engining.pg.parameter.OrganizationContextHolder;
  *
  */
 @Service
+@StepScope
 public class Cc6000P00OrganizationSetup implements ItemProcessor<Cc6000IAccountInfo, Cc6000IAccountInfo> {
 
 	@Override

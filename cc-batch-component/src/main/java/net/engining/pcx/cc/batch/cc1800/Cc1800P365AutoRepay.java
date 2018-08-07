@@ -12,10 +12,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.joda.time.LocalDate;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import net.engining.gm.infrastructure.enums.BusinessType;
@@ -38,7 +38,7 @@ import net.engining.pcx.cc.process.service.common.UComputeDueAndAgeCode;
  *
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P365AutoRepay implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
 	@Value("#{new org.joda.time.LocalDate(jobParameters['batchDate'].time)}")
 	private LocalDate batchDate;
