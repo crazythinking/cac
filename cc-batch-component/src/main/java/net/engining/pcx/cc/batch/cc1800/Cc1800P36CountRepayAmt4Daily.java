@@ -1,6 +1,6 @@
 package net.engining.pcx.cc.batch.cc1800;
 
-import org.springframework.context.annotation.Scope;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.stereotype.Service;
 
 
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
  *
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P36CountRepayAmt4Daily extends Cc1800P36AbstractCountRepay {
 
 	protected Cc1800P36CountRepayAmt4Daily()

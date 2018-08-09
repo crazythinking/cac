@@ -5,11 +5,11 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
-
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
 
  
 /**
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
  * 同步日终余额
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P72SyncEndDayBeforeBal implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> { 
 	
 	@PersistenceContext

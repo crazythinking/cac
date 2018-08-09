@@ -76,7 +76,6 @@
 						<design>cc-outer-accounting.erm</design>
 						<design>cc-inter-accounting.erm</design>
 						<design>cc-report.erm</design>
-						<design>cc-batch.erm</design>
 					</designs>
 					<targetModule>net.engining.pcx.cc.infrastructure.shared.model</targetModule>
 					<outputDirectory>${project.build.directory}/pg-entities</outputDirectory>

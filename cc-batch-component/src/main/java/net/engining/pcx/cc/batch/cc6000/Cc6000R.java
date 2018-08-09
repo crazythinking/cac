@@ -7,7 +7,9 @@ import javax.persistence.PersistenceContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -26,6 +28,8 @@ import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
  * @author Li Yinxia
  *
  */
+@Service
+@StepScope
 public class Cc6000R extends AbstractKeyBasedStreamReader<Integer, Cc6000IAccountInfo> {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());

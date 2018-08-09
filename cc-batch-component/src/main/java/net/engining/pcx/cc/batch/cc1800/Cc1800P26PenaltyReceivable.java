@@ -9,10 +9,10 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableList;
@@ -37,7 +37,7 @@ import net.engining.pg.parameter.ParameterFacility;
  *
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P26PenaltyReceivable implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
 	
 	@Value("#{new org.joda.time.LocalDate(jobParameters['batchDate'].time)}")

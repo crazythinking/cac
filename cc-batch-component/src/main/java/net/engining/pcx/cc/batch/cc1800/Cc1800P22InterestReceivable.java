@@ -1,6 +1,3 @@
-/**
- * 
- */
 package net.engining.pcx.cc.batch.cc1800;
 
 import java.math.BigDecimal;
@@ -11,10 +8,10 @@ import java.util.List;
 import org.apache.commons.lang3.time.DateUtils;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.google.common.base.MoreObjects;
@@ -45,7 +42,7 @@ import net.engining.pcx.cc.process.service.common.BlockCodeUtils;
  *
  */
 @Service
-@Scope("step")
+@StepScope
 public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
 	
 	@Value("#{new org.joda.time.LocalDate(jobParameters['batchDate'].time)}")

@@ -11,7 +11,9 @@ import javax.persistence.PersistenceContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -24,6 +26,8 @@ import net.engining.pcx.cc.infrastructure.shared.model.QCactTxnPost;
 import net.engining.pcx.cc.process.model.AcctModel;
 import net.engining.pg.batch.sdk.AbstractKeyBasedStreamReader;
 
+@Service
+@StepScope
 public class Cc1800R extends AbstractKeyBasedStreamReader<String, Cc1800IPostingInfo> {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());

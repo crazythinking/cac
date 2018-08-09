@@ -13,14 +13,12 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import net.engining.gm.infrastructure.enums.BusinessType;
 import net.engining.gm.infrastructure.enums.Interval;
 import net.engining.pcx.cc.infrastructure.shared.enums.PostTxnTypeDef;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
-import net.engining.pcx.cc.infrastructure.shared.model.CactEndChangeAcct;
 import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactEndChangeAcct;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactSubAcct;
