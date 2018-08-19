@@ -113,12 +113,12 @@ public class Cc1800P26PenaltyReceivable implements ItemProcessor<Cc1800IPostingI
 						startDate = new LocalDate(cactAccount.getPmtDueDate());
 					}
 					
-					BigDecimal pnitBal= newComputeService.getComputePnitBal(cactAccount, cactSubAcct ,  account );
+					BigDecimal pnitBaseBal= newComputeService.getComputePnitBal(cactAccount, cactSubAcct ,  account );
 					InterestTable interestTable = parameterFacility.loadParameter(
 							InterestTable.class, 
 							cactSubAcct.getPenalizedInterestCode(), 
 							account.intParamBaseType == ParamBaseType.Fixed ? cactAccount.getSetupDate() : batchDate.toDate());
-					BigDecimal interest = newInterestService.calcInterest(startDate, batchDate.plusDays(1), pnitBal, ImmutableList.of(interestTable), newComputeService.getReceivableScale(), InterestCycleRestMethod.NA);
+					BigDecimal interest = newInterestService.calcInterest(startDate, batchDate.plusDays(1), pnitBaseBal, ImmutableList.of(interestTable), newComputeService.getReceivableScale(), InterestCycleRestMethod.NA);
 					
 					if (interest != null)
 					{

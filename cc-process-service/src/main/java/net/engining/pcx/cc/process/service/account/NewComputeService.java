@@ -444,7 +444,8 @@ public class NewComputeService {
 	}
 	
 	/**
-	 * 根据规则算罚息额
+	 * FIXME 逻辑似乎有问题，待检查；
+	 * 根据规则确定计算罚息的基础金额
 	 * @param cactSubAcct 子账户信息
 	 * @param cactAccount 账户信息
 	 * @param Account 账户参数
@@ -454,16 +455,23 @@ public class NewComputeService {
 		BigDecimal pnitBal= new BigDecimal(0);
 		BigDecimal subBal=getStmtBal(cactSubAcct); //账期余额，不包含未到期
 		
-		if(account.isPnit){ //是否计算罚息
-			if( PnitType.A.equals(account.pnitType) && "INTE".equals( cactSubAcct.getSubAcctType() ) ){ //对于全额本金计算罚息，利息余额成分计算罚息即可
-				if(subBal.compareTo(new BigDecimal(0))>0)pnitBal=cactAccount.getTotalLoanPrincipalAmt();//本金全额 
+		//是否计算罚息
+		if(account.isPnit){
+			//对于全额本金计算罚息，利息余额成分计算罚息即可
+			if(subBal.compareTo(new BigDecimal(0))>0)
+			if( PnitType.A.equals(account.pnitType) && "INTE".equals( cactSubAcct.getSubAcctType() ) ){ 
+					pnitBal=cactAccount.getTotalLoanPrincipalAmt();//本金全额 
 			
-			}else if(PnitType.B.equals(account.pnitType) && "INTE".equals( cactSubAcct.getSubAcctType() ) ){//贷款应还未还本金算罚息
+			}
+			//贷款应还未还本金算罚息
+			else if(PnitType.B.equals(account.pnitType) && "INTE".equals( cactSubAcct.getSubAcctType() ) ){
 				BigDecimal totalCapi=getTotalCapi(cactSubAcct);
-				if(subBal.compareTo(new BigDecimal(0))>0)pnitBal=totalCapi;
+				if(subBal.compareTo(new BigDecimal(0))>0)
+					pnitBal=totalCapi;
 				
+			}
 			//本期全部本金： 到期的本金算罚息。 比如第一期到期本金10w，利息500，还了部分，罚息按10w算	
-			}else if(PnitType.C.equals(account.pnitType)&& "LBAL".equals( cactSubAcct.getSubAcctType() )  ){ 
+			else if(PnitType.C.equals(account.pnitType)&& "LBAL".equals( cactSubAcct.getSubAcctType() )  ){ 
 				if(subBal.compareTo(new BigDecimal(0))>0) pnitBal=cactSubAcct.getBeginBal();
 			
 			//本期本息和：   到期的本金和利息算罚息。 比如第一期到期本金10w，利息500，还了部分，罚息按10w+500算
@@ -485,11 +493,9 @@ public class NewComputeService {
 				
 			}
 			
-		}else if(!account.isPnit){ 
-			pnitBal= new BigDecimal(0);
-			
-		}else{
-			pnitBal= cactSubAcct.getEndDayBal() ;
+		}
+		else {
+			pnitBal= BigDecimal.ZERO;
 			
 		}
 		

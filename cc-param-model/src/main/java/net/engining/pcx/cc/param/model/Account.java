@@ -65,10 +65,10 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
 	public Boolean isPnit;
 	
 	/**
-	 * 逾期还款罚息参数
+	 * 逾期计算罚息的基础额规则
 	 * 
 	 */
-	@PropertyInfo(name="逾期还款罚息参数", length=2)
+	@PropertyInfo(name="逾期计算罚息的基础额规则", length=2)
 	public PnitType pnitType;
 	
 	

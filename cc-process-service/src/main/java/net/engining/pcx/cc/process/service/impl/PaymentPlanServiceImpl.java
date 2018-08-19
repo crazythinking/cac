@@ -18,14 +18,9 @@ import org.joda.time.LocalDate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
-import net.engining.gm.infrastructure.enums.AgeGroupCd;
 import net.engining.gm.infrastructure.enums.Interval;
 import net.engining.gm.param.model.OrganizationInfo;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
@@ -42,23 +37,18 @@ import net.engining.pcx.cc.param.model.SubAcct;
 import net.engining.pcx.cc.param.model.SubAcctType;
 import net.engining.pcx.cc.param.model.enums.CalcMethod;
 import net.engining.pcx.cc.param.model.enums.LoanFeeMethod;
-import net.engining.pcx.cc.param.model.enums.ParamBaseType;
 import net.engining.pcx.cc.param.model.enums.PaymentMethod;
 import net.engining.pcx.cc.param.model.enums.PrePaySettlementType;
 import net.engining.pcx.cc.process.model.PaymentPlan;
 import net.engining.pcx.cc.process.model.PaymentPlanDetail;
 import net.engining.pcx.cc.process.service.PaymentPlanService;
-import net.engining.pcx.cc.process.service.account.NewAgeService;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.account.NewInterestService;
-import net.engining.pcx.cc.process.service.account.NewInterestService.InterestCycleRestMethod;
 import net.engining.pcx.cc.process.service.account.NewPaymentPlanCalcService;
 import net.engining.pcx.cc.process.service.common.InterestTableConvertService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
-import net.engining.pg.support.utils.BeanUtilsExt;
 
-@Service
 public class PaymentPlanServiceImpl implements PaymentPlanService {
 
 	/**
@@ -87,8 +77,8 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 	@Autowired
 	private NewPaymentPlanCalcService newPaymentPlanCalcService;
 	
-	@Autowired
-	private NewAgeService newAgeService;
+//	@Autowired
+//	private NewAgeService newAgeService;
 
 	private QCactLoanPaymentPlan qLoanPaymentPlan = QCactLoanPaymentPlan.cactLoanPaymentPlan;
 
