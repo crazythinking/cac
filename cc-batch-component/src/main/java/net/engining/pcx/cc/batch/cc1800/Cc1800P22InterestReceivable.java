@@ -27,6 +27,7 @@ import net.engining.pcx.cc.param.model.RateCalcMethod;
 import net.engining.pcx.cc.param.model.SubAcct;
 import net.engining.pcx.cc.param.model.enums.InterestAccrualType;
 import net.engining.pcx.cc.param.model.enums.PaymentMethod;
+import net.engining.pcx.cc.param.model.enums.PrePaySettlementType;
 import net.engining.pcx.cc.param.model.enums.TransformType;
 import net.engining.pcx.cc.process.model.PaymentPlan;
 import net.engining.pcx.cc.process.service.PaymentPlanService;
@@ -247,7 +248,7 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 						if( cactAccount.getLastInterestDate()==null ||cactAccount.getInterestDate().compareTo(cactAccount.getLastInterestDate()) != 0 ){
 							//中民项目一次还本按月付息，末期利息特殊处理
 							if( account.paymentMethod.equals(PaymentMethod.IFP) && account.intUnit.equals(Interval.M )
-									 && interestTable.rateBaseInterval.equals(Interval.Y) && account.advanceType.equals("M") 
+									 && interestTable.rateBaseInterval.equals(Interval.Y) && PrePaySettlementType.M.equals(account.advanceType) 
 									 && interest.compareTo(new BigDecimal(0))>0 ){
 								PaymentPlan paymentPlan = paymentPlanService.searchPaymentPlan(cactAccount.getAcctSeq());
 								Date paymentDate=paymentPlan.getDetailsMap().get(paymentPlan.getDetailsMap().size()).getPaymentDate(); //末期还款计划日期

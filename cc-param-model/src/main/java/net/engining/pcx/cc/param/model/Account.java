@@ -28,6 +28,7 @@ import net.engining.pcx.cc.param.model.enums.LoanFeeMethod;
 import net.engining.pcx.cc.param.model.enums.ParamBaseType;
 import net.engining.pcx.cc.param.model.enums.PaymentMethod;
 import net.engining.pcx.cc.param.model.enums.PnitType;
+import net.engining.pcx.cc.param.model.enums.PrePaySettlementType;
 import net.engining.pcx.cc.param.model.enums.SysInternalAcctActionCd;
 import net.engining.pcx.cc.param.model.enums.SysTxnCd;
 import net.engining.pcx.cc.param.model.enums.TransformType;
@@ -72,10 +73,10 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
 	
 	
 	/**
-	 * 提前还款当期计息标准  M按月	  D按日
+	 * 提前还款当期计息标准  M按结息周期	  D按日
 	 */
 	@PropertyInfo(name="提前还款计息标准", length=2)
-	public String advanceType;
+	public PrePaySettlementType advanceType;
 	
 	
 	/**
@@ -133,8 +134,16 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
 	/**
 	 * 固定每次还款日
 	 */
-	@PropertyInfo(name="固定每次还款日", length=1)
+	@PropertyInfo(name="是否固定每次还款日", length=1)
     public Boolean isLockPaymentDay;
+	
+	/**
+     * 到期还款固定日：对于每月固定日期的情况
+     * 01 - 28 ： 固定日期 
+     * 99 ： 月末
+     */
+    @PropertyInfo(name="到期还款固定日 ", length=2)
+    public Integer fixedPmtDay;
 	
     /**
      * 到期还款日天数：对于在账单日（结息日）之后若干天
@@ -316,7 +325,7 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
      * true：首次结息日  = 建账日期 + 结息周期乘数
      * default : false
      */
-    @PropertyInfo(name="首期天数调整", length=1)
+    @PropertyInfo(name="首期天数是否调整", length=1)
     public Boolean intFirstPeriodAdj;
     
 //    一次性授信贷款、借记活期、借记定期、智能存款共有参数-结束
@@ -442,7 +451,7 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
 		acct1.internalAcctPostMapping.put(SysInternalAcctActionCd.S002, internalAcctPostCodes);
 		acct1.paymentMethod = PaymentMethod.IFP;
 		acct1.pmtGracePrd = 0;
-		acct1.advanceType = "a";
+		acct1.advanceType = PrePaySettlementType.D;
 		acct1.pnitType = PnitType.B;
 		
 		Account acct2 = new Account();
@@ -482,7 +491,7 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
 		acct2.internalAcctPostMapping.put(SysInternalAcctActionCd.S002, internalAcctPostCodes);
 		acct2.paymentMethod = PaymentMethod.IFP;
 		acct2.pmtGracePrd = 0;
-		acct2.advanceType = "a";
+		acct2.advanceType = PrePaySettlementType.D;
 		acct2.pnitType = PnitType.B;
 		
 		System.out.println(acct1.compareTo(acct2));

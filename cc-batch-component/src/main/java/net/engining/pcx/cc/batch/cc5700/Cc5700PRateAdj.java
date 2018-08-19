@@ -99,10 +99,10 @@ public class Cc5700PRateAdj implements ItemProcessor<CactAccount, CactAccount> {
 		cactAccount.setAcctParamId(parameter);
 		
 		
-		//还款计划更新,暂时满足中民项目
+		//FIXME 待重构，还款计划更新,暂时满足中民项目
 		PaymentPlan paymentPlan = paymentPlanService.regPaymentPlan(cactAccount.getTotalLoanPeriod(), account.intUnit, account.intUnitMult, account.paymentMethod,
 				cactAccount.getTotalLoanPrincipalAmt(),newIntTable , account.loanFeeMethod, account.loanFeeCalcMethod, account.feeAmount, account.feeRate, 
-				cactAccount.getSetupDate(), account.pmtDueDays, account.intFirstPeriodAdj );
+				cactAccount.getSetupDate(), account.pmtDueDays, account.intFirstPeriodAdj, 0);
 		paymentPlanService.updatePaymentPlan( cactAccount.getAcctSeq() ,cactAccount.getCustId(),cactAccount.getAcctParamId(),
 				paymentPlan,new Date()	);
 		
