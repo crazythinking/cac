@@ -94,7 +94,7 @@ public class Cc1800P26PenaltyReceivable implements ItemProcessor<Cc1800IPostingI
 					
 					if (startDate.isAfter(batchDate))
 					{
-						// 还没到起息日，不处理
+						// 当前批次日还没到罚息日，不处理
 						continue;
 					}
 					
@@ -106,13 +106,14 @@ public class Cc1800P26PenaltyReceivable implements ItemProcessor<Cc1800IPostingI
 						Boolean result = blockCodeUtils.getTransControl(txnCode, blockCode, account);
 						if (result) continue;
 					}
-					
+					//FIXME 与上面的逻辑矛盾
 					if (cactSubAcct.getLastPenalizedInterestDate() == null)
 					{
 						// 如果上次罚息日期为空，表示当前周期是第一次逾期，需要补记宽限日期间的罚息
 						startDate = new LocalDate(cactAccount.getPmtDueDate());
 					}
 					
+					//获取计算罚息的基础金额
 					BigDecimal pnitBaseBal= newComputeService.getComputePnitBal(cactAccount, cactSubAcct ,  account );
 					InterestTable interestTable = parameterFacility.loadParameter(
 							InterestTable.class, 

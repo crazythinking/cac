@@ -10,6 +10,10 @@ import net.engining.pg.support.meta.PropertyInfo;
 public class SubAcctType implements Serializable {
 
 	private static final long serialVersionUID = -6405896117422664294L;
+	
+	public enum SubAcctTypeDef{
+		LOAN, LBAL, INTE, PNIT, PAYM, SFEE
+	}
 
 	/**
 	 * 子帐户类型标识
