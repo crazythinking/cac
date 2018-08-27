@@ -257,7 +257,7 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 								}else{
 									cactSubAcct.setIntReceivable(cactSubAcct.getIntReceivable().add(interest) );
 								}
-							}else if( account.paymentMethod.equals(PaymentMethod.PSV )&& interest.compareTo(new BigDecimal(0))>0 ){
+							}else if( account.paymentMethod.equals(PaymentMethod.PSV ) && interest.compareTo(new BigDecimal(0))>0 ){
 								PaymentPlan paymentPlan = paymentPlanService.searchPaymentPlan(cactAccount.getAcctSeq());
 								for(int i=paymentPlan.getDetailsMap().size() ;i>=1 ; i--){ 
 									Date paymentDate=paymentPlan.getDetailsMap().get(i).getPaymentDate();

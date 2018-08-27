@@ -199,7 +199,7 @@ public class NewPaymentPlanCalcService {
 			}
 
 			// 非等息的情况下，其他还款方式都是按剩余本金计算利息:按日按剩余本金计息(计息周期为日)
-			if (paymentMethod != PaymentMethod.PSV && paymentMethod != PaymentMethod.MSF
+			if (paymentMethod != PaymentMethod.PSV && paymentMethod != PaymentMethod.PSZ && paymentMethod != PaymentMethod.MSF
 					&& paymentMethod != PaymentMethod.MSV && paymentMethod != PaymentMethod.MSB) {
 				detail.setInterestAmt(
 						newComputeService.calcTieredAmount(interestParam.tierInd, calcRates, leftBal, leftBal)
@@ -261,8 +261,9 @@ public class NewPaymentPlanCalcService {
 			BigDecimal leftBal, BigDecimal totalBal, Integer mult, List<RateCalcMethod> calcRates,
 			PaymentPlanDetail detail) {
 		switch (paymentMethod) {
-		case MRT:
-		case PSV: {
+		case MRT: //等本金且剩余靠后类型
+		case PSV:
+		case PSZ: {
 
 			if (i == totalPeriod - 1) {
 				detail.setPrincipalBal(leftBal);
@@ -273,7 +274,8 @@ public class NewPaymentPlanCalcService {
 			}
 			break;
 		}
-		case MRF: {
+		case MRF: //等本金且剩余靠前类型
+		case MRG: {
 			if (i == 0) {
 				detail.setPrincipalBal(
 						totalBal.subtract(totalBal.divide(BigDecimal.valueOf(totalPeriod), 4, RoundingMode.HALF_UP)
@@ -285,7 +287,7 @@ public class NewPaymentPlanCalcService {
 			}
 			break;
 		}
-		case MSV: {
+		case MSV: {//剩余靠后类型
 			if (i == totalPeriod - 1) {
 				detail.setPrincipalBal(leftBal);
 				leftBal = BigDecimal.ZERO;
@@ -297,11 +299,25 @@ public class NewPaymentPlanCalcService {
 			}
 			break;
 		}
+		case MSB: //剩余靠前类型
+		case MSF: {
+			if (i == 0) {
+				detail.setPrincipalBal(
+						getMSVRepayAmt(totalBal, calcRates.get(0).rate.multiply(BigDecimal.valueOf(mult)), totalPeriod)
+								.setScale(4, RoundingMode.HALF_UP).subtract(detail.getInterestAmt()));
+				leftBal = leftBal.subtract(detail.getPrincipalBal());
+			} else {
+				detail.setPrincipalBal(leftBal);
+				leftBal = leftBal.subtract(detail.getPrincipalBal());
+			}
+			break;
+		}
 		case OPT: {
 			detail.setPrincipalBal(totalBal);
 			break;
 		}
-		case IFP: {
+		case IFP: 
+		case IIF: {
 			if (i == totalPeriod - 1) {
 				detail.setPrincipalBal(leftBal);
 				leftBal = BigDecimal.ZERO;

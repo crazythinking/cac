@@ -14,7 +14,8 @@ import net.engining.pg.support.meta.EnumInfo;
 	"IIF|分期先息后本(利息前置)",
 	"MPA|按账期还款(信用支付)",
 	"IWP|利随本清",
-	"PSV|等本等息"
+	"PSV|等本等息",
+	"PSZ|非标等本等息，逾期利息按应还未还本金计算"
 })
 public enum PaymentMethod {
 	
@@ -70,5 +71,11 @@ public enum PaymentMethod {
 	/**
 	 * 等本等息
 	 */
-	PSV
+	PSV,
+	
+	/**
+	 * 非标等本等息，逾期利息按应还未还本金计算
+	 */
+	PSZ
+	
 }
