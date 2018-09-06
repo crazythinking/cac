@@ -148,6 +148,8 @@ public class NewPostService
 		cactTxnPost.setTxnType(detail.getTxnType());
 		cactTxnPost.setOppAcct(detail.getOppAcct());
 		cactTxnPost.setLastUpdateDate(new Date());
+		cactTxnPost.setBizDate(provider7x24.getCurrentDate().toDate());
+		cactTxnPost.fillDefaultValues();
 		em.persist(cactTxnPost);
 		
 		// TODO review

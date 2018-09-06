@@ -88,6 +88,8 @@ public class InternalAccountService{
 			txnPost4Batch.setRedBlueInd(code.redBlueInd);
 			txnPost4Batch.setLastUpdateDate(new Date());
 			txnPost4Batch.fillDefaultValues();
+			txnPost4Batch.setBizDate(provider7x24.getCurrentDate().toDate());
+			txnPost4Batch.fillDefaultValues();
 			em.persist(txnPost4Batch);
 		}
 		else
@@ -106,6 +108,7 @@ public class InternalAccountService{
 			txnPost4Online.setTxnDetailType(txnDetailType);//来源交易流水类型
 			txnPost4Online.setRedBlueInd(code.redBlueInd);
 			txnPost4Online.setLastUpdateDate(new Date());
+			txnPost4Online.setBizDate(provider7x24.getCurrentDate().toDate());
 			txnPost4Online.fillDefaultValues();
 			em.persist(txnPost4Online);
 		}
@@ -170,6 +173,8 @@ public class InternalAccountService{
 		txnPost4Online.setTxnDetailType(txnDetailType);//来源交易流水类型
 		txnPost4Online.setRedBlueInd(redBlueInd);
 		txnPost4Online.setLastUpdateDate(new Date());
+		txnPost4Online.setBizDate(provider7x24.getCurrentDate().toDate());
+		txnPost4Online.fillDefaultValues();
 		em.persist(txnPost4Online);
 	}
 }

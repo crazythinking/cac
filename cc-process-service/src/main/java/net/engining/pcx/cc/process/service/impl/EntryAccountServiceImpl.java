@@ -26,6 +26,7 @@ import net.engining.pcx.cc.param.model.enums.RedBlueInd;
 import net.engining.pcx.cc.process.service.common.AccountingBean;
 import net.engining.pcx.cc.process.service.common.AcctingRecord;
 import net.engining.pcx.cc.process.service.common.GlCalculator;
+import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
 
@@ -37,6 +38,8 @@ public class EntryAccountServiceImpl {
 	
 	@Autowired
 	private ParameterFacility parameterCacheFacility;
+	@Autowired
+	private Provider7x24 provider7x24;
 	
 	@PersistenceContext
 	private EntityManager em;
@@ -71,7 +74,8 @@ public class EntryAccountServiceImpl {
 		apInternalGltxn.setTxnDate(postDate);
 		apInternalGltxn.setTxnDetailSeq(txnDetailSeq);
 		apInternalGltxn.setTxnDetailType(txnDetailType);
-		
+		apInternalGltxn.setBizDate(provider7x24.getCurrentDate().toDate());
+		apInternalGltxn.fillDefaultValues();
 		em.persist(apInternalGltxn);
 		
 	}
@@ -108,6 +112,8 @@ public class EntryAccountServiceImpl {
 				agvd.setSubjAmount(bean.getAmount());
 			agvd.setVolDesc(bean.getTxndesc());
 			agvd.setBranch(bean.getBranch());
+			agvd.setBizDate(provider7x24.getCurrentDate().toDate());
+			agvd.fillDefaultValues();
 			em.persist(agvd);
 			
 			if(bean.getDbsubject()!=null)

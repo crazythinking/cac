@@ -10,7 +10,9 @@ import javax.persistence.PersistenceContext;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
 import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
 import net.engining.pcx.cc.param.model.SubAcct;
+import net.engining.pcx.cc.process.service.support.Provider7x24;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -22,6 +24,9 @@ public class CreateSubAccount {
 
 	@PersistenceContext
 	private EntityManager em;
+	
+	@Autowired
+	Provider7x24 provider7x24;
 	
 	/**
 	 * @param subAcct 已经确定的子账户参数
@@ -68,6 +73,8 @@ public class CreateSubAccount {
 		newSubAcct.setIntPenaltyAccrual(BigDecimal.ZERO);
 		newSubAcct.setPenalizedInterestCode(subAcct.penalizedInterestTable);
 		newSubAcct.setAddupAmt(BigDecimal.ZERO);
+		newSubAcct.setBizDate(provider7x24.getCurrentDate().toDate());
+		newSubAcct.fillDefaultValues();
 		em.persist(newSubAcct);
 		
 		return newSubAcct;

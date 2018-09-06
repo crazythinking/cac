@@ -297,6 +297,8 @@ public class OffsetService
 					cactTxnPostIn.setTxnDetailType(txnDetailType);
 					cactTxnPostIn.setTxnShortDesc(postCode.shortDesc);
 					cactTxnPostIn.setTxnTime(new Date());
+					cactTxnPostIn.setBizDate(provider7x24.getCurrentDate().toDate());
+					cactTxnPostIn.fillDefaultValues();
 					em.persist(cactTxnPostIn);
 					
 					Account accountParam = newComputeService.retrieveAccount(cactAccount);
@@ -326,6 +328,8 @@ public class OffsetService
 					cactTxnPostOut.setTxnDetailType(txnDetailType);
 					cactTxnPostOut.setTxnShortDesc(postCodeOut.shortDesc);
 					cactTxnPostOut.setTxnTime(new Date());
+					cactTxnPostOut.setBizDate(provider7x24.getCurrentDate().toDate());
+					cactTxnPostOut.fillDefaultValues();
 					em.persist(cactTxnPostOut);
 					
 					/*

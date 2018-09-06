@@ -190,6 +190,7 @@ public class AccountManageServiceImpl implements AccountManageService{
 		CactAccountNo acctNo = new CactAccountNo();
 		acctNo.setOrg(OrganizationContextHolder.getCurrentOrganizationId());
 		acctNo.setCustId(custId);
+		acctNo.setBizDate(provider7x24.getCurrentDate().toDate());
 		acctNo.fillDefaultValues();
 		em.persist(acctNo);
 		return acctNo.getAcctNo();

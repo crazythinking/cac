@@ -23,6 +23,7 @@ import net.engining.pcx.cc.param.model.Account;
 import net.engining.pcx.cc.param.model.SubAcct;
 import net.engining.pcx.cc.param.model.enums.PaymentCalcMethod;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
+import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
 
 /**
@@ -73,6 +74,9 @@ public class UComputeDueAndAgeCode {
 	 */
 	@Autowired
 	private BlockCodeUtils blockCodeUtils;
+	
+	@Autowired
+	private Provider7x24 provider7x24;
 	
 	@PersistenceContext
 	private EntityManager em;
@@ -253,6 +257,8 @@ public class UComputeDueAndAgeCode {
 			}
 		}
 		cactAgeDue.setPeriod(period + 1);
+		cactAgeDue.setBizDate(provider7x24.getCurrentDate().toDate());
+		cactAgeDue.fillDefaultValues();
 		em.persist(cactAgeDue);
 		cactAgeDues.add(cactAgeDue);
 	}

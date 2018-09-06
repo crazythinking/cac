@@ -28,6 +28,7 @@ import net.engining.pcx.cc.param.model.InternalAccount;
 import net.engining.pcx.cc.param.model.Subject;
 import net.engining.pcx.cc.param.model.enums.InternalAccountStatus;
 import net.engining.pcx.cc.param.model.enums.RedBlueInd;
+import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
 
@@ -40,6 +41,8 @@ public class InternalTxnPostTask {
 	@PersistenceContext
 	private EntityManager em;
 
+	@Autowired
+	private Provider7x24 provider7x24;
 
 	@Autowired
 	private SystemStatusFacility systemStatusFacility;
@@ -87,6 +90,8 @@ public class InternalTxnPostTask {
 					cactInternalAcct.setSubjectCd(internalAccount.subjectCd);
 					cactInternalAcct.setInternalAcctName(internalAccount.desc);
 					cactInternalAcct.setLastUpdateDate(new Date());
+					cactInternalAcct.setBizDate(provider7x24.getCurrentDate().toDate());
+					cactInternalAcct.fillDefaultValues();
 					em.persist(cactInternalAcct);
 				}
 				//查内部账户对应参数
@@ -128,6 +133,8 @@ public class InternalTxnPostTask {
 				hst.setTxnPostSeq(detail.getTxnSeq());
 				hst.setTxnPostType(TxnDetailType.L);
 				hst.setLastUpdateDate(new Date());
+				hst.setBizDate(provider7x24.getCurrentDate().toDate());
+				hst.fillDefaultValues();
 				em.persist(hst);
 				em.remove(detail);
 				 
