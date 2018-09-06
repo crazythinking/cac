@@ -166,10 +166,11 @@ public class AccountManageServiceImpl implements AccountManageService{
 		// FIXME 修正
 		acct.setGraceDaysFullInd(true);
 		acct.setOwningBranch(OrganizationContextHolder.getCurrentOrganizationId());//FIXME 增加按所属分支行
-		acct.setPaymentHist(" ");
-		acct.setBillingCycle(" "); //oracle不允许在nullable的字段里插入空值，所以改为空格 2014.12.17
+//		acct.setPaymentHist(" ");
+//		acct.setBillingCycle(" "); //oracle不允许在nullable的字段里插入空值，所以改为空格 2014.12.17
 		acct.setWaiveLatefeeInd(false);
-		
+		acct.setBizDate(provider7x24.getCurrentDate().toDate());
+		acct.fillDefaultValues();
 		
 		em.persist(acct);
 		return acct.getAcctSeq();
