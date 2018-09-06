@@ -335,6 +335,8 @@ public class NewPostService
 			cactSubAcct.setIntPenaltyAccrual(BigDecimal.ZERO);
 			cactSubAcct.setPenalizedInterestCode(subAcct.penalizedInterestTable);
 			cactSubAcct.setAddupAmt(BigDecimal.ZERO);
+			cactSubAcct.setBizDate(provider7x24.getCurrentDate().toDate());
+			cactSubAcct.fillDefaultValues();
 			em.persist(cactSubAcct);
 			targetModel.getCactSubAccts().add(cactSubAcct);
 		}
