@@ -12,7 +12,7 @@
 	<category_index>0</category_index>
 	<zoom>1.0</zoom>
 	<x>0</x>
-	<y>936</y>
+	<y>-12</y>
 	<default_color>
 		<r>128</r>
 		<g>128</g>
@@ -135,7 +135,7 @@
 			</connections>
 			<display>false</display>
 			<creation_date>2018-01-30 17:14:33</creation_date>
-			<updated_date>2018-07-04 16:21:45</updated_date>
+			<updated_date>2018-09-07 19:57:57</updated_date>
 			<model_property>
 				<name>Project Name</name>
 				<value></value>
@@ -286,7 +286,7 @@
 		</word>
 		<word>
 			<id>7</id>
-			<length>1</length>
+			<length>15</length>
 			<decimal>null</decimal>
 			<array>false</array>
 			<array_dimension>null</array_dimension>
@@ -298,7 +298,7 @@
 			<description>///&#x0D;&#x0A;@net.engining.gm.infrastructure.enums.AgeGroupCd</description>
 			<logical_name>账龄组代码</logical_name>
 			<physical_name>AGE_GROUP_CD</physical_name>
-			<type>character(n)</type>
+			<type>varchar(n)</type>
 		</word>
 		<word>
 			<id>8</id>
@@ -5046,7 +5046,7 @@
 					<unique_key_name></unique_key_name>
 					<logical_name></logical_name>
 					<physical_name></physical_name>
-					<type>character(n)</type>
+					<type>varchar(n)</type>
 					<constraint></constraint>
 					<default_value></default_value>
 					<auto_increment>false</auto_increment>
@@ -5471,7 +5471,7 @@
 			<option></option>
 			<columns>
 				<normal_column>
-					<word_id>49</word_id>
+					<word_id>50</word_id>
 					<id>92</id>
 					<description></description>
 					<unique_key_name></unique_key_name>
@@ -6577,7 +6577,7 @@
 			<option></option>
 			<columns>
 				<normal_column>
-					<word_id>106</word_id>
+					<word_id>107</word_id>
 					<id>124</id>
 					<description></description>
 					<unique_key_name></unique_key_name>
@@ -8132,7 +8132,7 @@
 			<option></option>
 			<columns>
 				<normal_column>
-					<word_id>107</word_id>
+					<word_id>106</word_id>
 					<id>169</id>
 					<description></description>
 					<unique_key_name></unique_key_name>
@@ -9256,7 +9256,7 @@
 			<option></option>
 			<columns>
 				<normal_column>
-					<word_id>107</word_id>
+					<word_id>106</word_id>
 					<id>202</id>
 					<description></description>
 					<unique_key_name></unique_key_name>
@@ -12022,7 +12022,7 @@
 			<option></option>
 			<columns>
 				<normal_column>
-					<word_id>106</word_id>
+					<word_id>107</word_id>
 					<id>282</id>
 					<description></description>
 					<unique_key_name></unique_key_name>
@@ -12651,7 +12651,7 @@
 			<option></option>
 			<columns>
 				<normal_column>
-					<word_id>50</word_id>
+					<word_id>49</word_id>
 					<id>300</id>
 					<description></description>
 					<unique_key_name></unique_key_name>
@@ -13742,7 +13742,7 @@
 			<option></option>
 			<columns>
 				<normal_column>
-					<word_id>106</word_id>
+					<word_id>107</word_id>
 					<id>332</id>
 					<description></description>
 					<unique_key_name></unique_key_name>
@@ -14272,7 +14272,7 @@
 			<option></option>
 			<columns>
 				<normal_column>
-					<word_id>107</word_id>
+					<word_id>106</word_id>
 					<id>347</id>
 					<description></description>
 					<unique_key_name></unique_key_name>
@@ -15237,7 +15237,7 @@
 					<unique_key_name></unique_key_name>
 					<logical_name></logical_name>
 					<physical_name></physical_name>
-					<type>character(n)</type>
+					<type>varchar(n)</type>
 					<constraint></constraint>
 					<default_value></default_value>
 					<auto_increment>false</auto_increment>

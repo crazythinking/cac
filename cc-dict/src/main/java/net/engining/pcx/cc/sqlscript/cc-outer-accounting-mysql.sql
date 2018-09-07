@@ -204,7 +204,7 @@ CREATE TABLE AP_GL_TXN
 	ACQ_BRANCH varchar(9) COMMENT '受理所属分支行',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.AgeGroupCd
-	AGE_GROUP_CD char(1) COMMENT '账龄组代码 : ///
+	AGE_GROUP_CD varchar(15) COMMENT '账龄组代码 : ///
 @net.engining.gm.infrastructure.enums.AgeGroupCd',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType
@@ -264,7 +264,7 @@ CREATE TABLE AP_GL_TXN_HST
 	ACQ_BRANCH varchar(9) COMMENT '受理所属分支行',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.AgeGroupCd
-	AGE_GROUP_CD char(1) COMMENT '账龄组代码 : ///
+	AGE_GROUP_CD varchar(15) COMMENT '账龄组代码 : ///
 @net.engining.gm.infrastructure.enums.AgeGroupCd',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType

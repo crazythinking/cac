@@ -261,7 +261,7 @@ CREATE TABLE CACT_INTERNAL_TXN_POST_HST
 	ORG varchar(12) NOT NULL COMMENT '机构号',
 	BRANCH_NO varchar(9) COMMENT '分行号',
 	INTERNAL_ACCT_ID varchar(30) NOT NULL COMMENT '内部账户号',
-	INTERNAL_ACCT_POST_CODE varchar(20) COMMENT '内部账户入账代码',
+	INTERNAL_ACCT_POST_CODE varchar(100) COMMENT '内部账户入账代码',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.TxnDirection
 	-- 
@@ -307,7 +307,7 @@ CREATE TABLE CACT_INTRNL_TXN_POST_BT
 	ORG varchar(12) NOT NULL COMMENT '机构号',
 	BRANCH_NO varchar(9) COMMENT '分行号',
 	INTERNAL_ACCT_ID varchar(30) COMMENT '内部账户号',
-	INTERNAL_ACCT_POST_CODE varchar(20) NOT NULL COMMENT '内部账户入账代码',
+	INTERNAL_ACCT_POST_CODE varchar(100) NOT NULL COMMENT '内部账户入账代码',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.TxnDirection
 	-- 
@@ -348,7 +348,7 @@ CREATE TABLE CACT_INTRNL_TXN_POST_OL
 	ORG varchar(12) NOT NULL COMMENT '机构号',
 	BRANCH_NO varchar(9) COMMENT '分行号',
 	INTERNAL_ACCT_ID varchar(30) COMMENT '内部账户号',
-	INTERNAL_ACCT_POST_CODE varchar(20) COMMENT '内部账户入账代码',
+	INTERNAL_ACCT_POST_CODE varchar(100) COMMENT '内部账户入账代码',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.TxnDirection
 	-- 
