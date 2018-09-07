@@ -175,8 +175,9 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			// 计算应收利息
 			// 根据利率参数的计息单位转换为日利率/月利率/年利率
 			List<RateCalcMethod> calcRates = interestTableConvertUtils.convertRate(interestParam);
+			LocalDate lastPaymentDate = new LocalDate(i == 0 ? postDate : details.get(i - 1).getPaymentDate());
 			newPaymentPlanCalcService.setupInterestAmt(interval, totalPeriod, paymentMethod, interestParam, i, postDate, mult, calcRates, leftBal,
-					loanAmount, detail, details.get(i - 1).getPaymentDate());
+					loanAmount, detail, lastPaymentDate.toDate());
 
 			// 计算本金
 			newPaymentPlanCalcService.setupPrincipalBal(paymentMethod, totalPeriod, i, leftBal, totalBal, mult, calcRates, detail);
