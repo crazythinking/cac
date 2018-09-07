@@ -45,6 +45,7 @@ import net.engining.pcx.cc.process.service.PaymentPlanService;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.account.NewInterestService;
 import net.engining.pcx.cc.process.service.account.NewPaymentPlanCalcService;
+import net.engining.pcx.cc.process.service.account.NewPaymentPlanCalcService.TempPaymentPlanDetailExt;
 import net.engining.pcx.cc.process.service.common.InterestTableConvertService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
@@ -138,6 +139,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 
 		List<PaymentPlanDetail> details = new ArrayList<PaymentPlanDetail>();
 		Map<Integer, PaymentPlanDetail> detailsMap = new HashMap<Integer, PaymentPlanDetail>();
+		TempPaymentPlanDetailExt tempPaymentPlanDetailExt = null;
 		BigDecimal totalBal = loanAmount;
 		BigDecimal leftBal = loanAmount;
 		for (int i = 0; i < totalPeriod; i++) {
@@ -166,21 +168,23 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			// 计算还款日, 还款固定日为0或大于31(月内最大值)时，均表示非固定日还款
 			if (fixedPmtDay != 0 || fixedPmtDay > 31) {
 				// 确定fixedDate
-				newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedPmtDay, mult, 0, i, detail);
+				detail = newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedPmtDay, mult, 0, i, detail);
 			}
 			else {
-				newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, mult, pmtDueDays, i, detail);
+				detail = newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, mult, pmtDueDays, i, detail);
 			}
 
 			// 计算应收利息
 			// 根据利率参数的计息单位转换为日利率/月利率/年利率
 			List<RateCalcMethod> calcRates = interestTableConvertUtils.convertRate(interestParam);
 			LocalDate lastPaymentDate = new LocalDate(i == 0 ? postDate : details.get(i - 1).getPaymentDate());
-			newPaymentPlanCalcService.setupInterestAmt(interval, totalPeriod, paymentMethod, interestParam, i, postDate, mult, calcRates, leftBal,
+			detail = newPaymentPlanCalcService.setupInterestAmt(interval, totalPeriod, paymentMethod, interestParam, i, postDate, mult, calcRates, leftBal,
 					loanAmount, detail, lastPaymentDate.toDate());
 
 			// 计算本金
-			newPaymentPlanCalcService.setupPrincipalBal(paymentMethod, totalPeriod, i, leftBal, totalBal, mult, calcRates, detail);
+			tempPaymentPlanDetailExt = newPaymentPlanCalcService.setupPrincipalBal(paymentMethod, totalPeriod, i, leftBal, totalBal, mult, calcRates, detail);
+			//剩余本金需要在这里接收，由于上一期计算改变了本金的值
+			leftBal = tempPaymentPlanDetailExt.getLeftBal();
 
 			// setup 原始计划金额
 			detail.setOrigPrincipalBal(detail.getPrincipalBal());

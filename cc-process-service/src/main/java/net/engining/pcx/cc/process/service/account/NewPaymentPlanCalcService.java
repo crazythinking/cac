@@ -257,9 +257,10 @@ public class NewPaymentPlanCalcService {
 	 * @param detail
 	 * @return
 	 */
-	public PaymentPlanDetail setupPrincipalBal(PaymentMethod paymentMethod, Integer totalPeriod, int i,
+	public TempPaymentPlanDetailExt setupPrincipalBal(PaymentMethod paymentMethod, Integer totalPeriod, int i,
 			BigDecimal leftBal, BigDecimal totalBal, Integer mult, List<RateCalcMethod> calcRates,
 			PaymentPlanDetail detail) {
+		TempPaymentPlanDetailExt tempPaymentPlanDetailExt = new TempPaymentPlanDetailExt();
 		switch (paymentMethod) {
 		case MRT: //等本金且剩余靠后类型
 		case PSV:
@@ -335,7 +336,9 @@ public class NewPaymentPlanCalcService {
 			throw new IllegalArgumentException(paymentMethod + "暂不支持");
 		}
 
-		return detail;
+		tempPaymentPlanDetailExt.setPaymentPlanDetail(detail);
+		tempPaymentPlanDetailExt.setLeftBal(leftBal);
+		return tempPaymentPlanDetailExt;
 	}
 
 	/**
@@ -395,5 +398,43 @@ public class NewPaymentPlanCalcService {
 				.subtract((totalAmt.multiply(mRate).multiply((new BigDecimal(1).add(mRate)).pow(nPeriod - 1))).divide(
 						(new BigDecimal(1).add(mRate)).pow(mths).subtract(new BigDecimal(1)), 6, RoundingMode.HALF_UP));
 		return amt;
+	}
+	
+	/**
+	 * 用于临时保存循环计算时的对象值
+	 * @author luxue
+	 *
+	 */
+	public class TempPaymentPlanDetailExt{
+		PaymentPlanDetail paymentPlanDetail;
+		/**
+		 * 剩余本金
+		 */
+		BigDecimal leftBal;
+		/**
+		 * @return the paymentPlanDetail
+		 */
+		public PaymentPlanDetail getPaymentPlanDetail() {
+			return paymentPlanDetail;
+		}
+		/**
+		 * @param paymentPlanDetail the paymentPlanDetail to set
+		 */
+		public void setPaymentPlanDetail(PaymentPlanDetail paymentPlanDetail) {
+			this.paymentPlanDetail = paymentPlanDetail;
+		}
+		/**
+		 * @return the leftBal
+		 */
+		public BigDecimal getLeftBal() {
+			return leftBal;
+		}
+		/**
+		 * @param leftBal the leftBal to set
+		 */
+		public void setLeftBal(BigDecimal leftBal) {
+			this.leftBal = leftBal;
+		}
+		
 	}
 }
