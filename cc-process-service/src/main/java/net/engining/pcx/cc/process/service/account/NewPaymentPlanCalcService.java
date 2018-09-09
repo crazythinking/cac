@@ -218,7 +218,7 @@ public class NewPaymentPlanCalcService {
 								.setScale(newComputeService.getReceivableScale(), RoundingMode.HALF_UP));
 			} else {
 				detail.setInterestAmt((leftBal.multiply(calcRates.get(0).rate).multiply(BigDecimal.valueOf(mult)))
-						.setScale(4, RoundingMode.HALF_UP));
+						.setScale(2, RoundingMode.HALF_UP));
 			}
 
 			// 以上逻辑对于利息分期的方式均会造成在不能整除时总利息差1分钱的情况；这种情况在业务上可以控制，不需要在意这1分钱；
@@ -230,7 +230,7 @@ public class NewPaymentPlanCalcService {
 						.calcTieredAmount(interestParam.tierInd, calcRates, leftBal, leftBal)
 						.multiply(new BigDecimal(totalPeriod)))
 								.subtract(detail.getInterestAmt().multiply(new BigDecimal(totalPeriod - 1)));
-				detail.setInterestAmt(lastInterestAmt.setScale(4, RoundingMode.HALF_UP));
+				detail.setInterestAmt(lastInterestAmt.setScale(2, RoundingMode.HALF_UP));
 			}
 
 		}
@@ -270,7 +270,7 @@ public class NewPaymentPlanCalcService {
 				detail.setPrincipalBal(leftBal);
 				leftBal = BigDecimal.ZERO;
 			} else {
-				detail.setPrincipalBal(totalBal.divide(BigDecimal.valueOf(totalPeriod), 4, RoundingMode.HALF_UP));
+				detail.setPrincipalBal(totalBal.divide(BigDecimal.valueOf(totalPeriod), 2, RoundingMode.HALF_UP));
 				leftBal = leftBal.subtract(detail.getPrincipalBal());
 			}
 			break;
@@ -279,11 +279,11 @@ public class NewPaymentPlanCalcService {
 		case MRG: {
 			if (i == 0) {
 				detail.setPrincipalBal(
-						totalBal.subtract(totalBal.divide(BigDecimal.valueOf(totalPeriod), 4, RoundingMode.HALF_UP)
+						totalBal.subtract(totalBal.divide(BigDecimal.valueOf(totalPeriod), 2, RoundingMode.HALF_UP)
 								.multiply(BigDecimal.valueOf(totalPeriod - 1))));
 				leftBal = leftBal.subtract(detail.getPrincipalBal());
 			} else {
-				detail.setPrincipalBal(totalBal.divide(BigDecimal.valueOf(totalPeriod), 4, RoundingMode.HALF_UP));
+				detail.setPrincipalBal(totalBal.divide(BigDecimal.valueOf(totalPeriod), 2, RoundingMode.HALF_UP));
 				leftBal = leftBal.subtract(detail.getPrincipalBal());
 			}
 			break;
@@ -295,7 +295,7 @@ public class NewPaymentPlanCalcService {
 			} else {
 				detail.setPrincipalBal(
 						getMSVRepayAmt(totalBal, calcRates.get(0).rate.multiply(BigDecimal.valueOf(mult)), totalPeriod)
-								.setScale(4, RoundingMode.HALF_UP).subtract(detail.getInterestAmt()));
+								.setScale(2, RoundingMode.HALF_UP).subtract(detail.getInterestAmt()));
 				leftBal = leftBal.subtract(detail.getPrincipalBal());
 			}
 			break;
@@ -305,7 +305,7 @@ public class NewPaymentPlanCalcService {
 			if (i == 0) {
 				detail.setPrincipalBal(
 						getMSVRepayAmt(totalBal, calcRates.get(0).rate.multiply(BigDecimal.valueOf(mult)), totalPeriod)
-								.setScale(4, RoundingMode.HALF_UP).subtract(detail.getInterestAmt()));
+								.setScale(2, RoundingMode.HALF_UP).subtract(detail.getInterestAmt()));
 				leftBal = leftBal.subtract(detail.getPrincipalBal());
 			} else {
 				detail.setPrincipalBal(leftBal);

@@ -752,9 +752,9 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 					// 为了解决还款冲销差0.01的情况，先算出endDate前一天的利息；再加一天利息来计算，确保于六位转两位四舍五入后的差异与批量计息的逻辑一致
 					// endDate表示闭区间，所以直接是这个days的值
 					intAmt = intAmt.add(newComputeService.calcTieredAmount(tables.get(0).tierInd, dailyRates, principalAmount, principalAmount)
-							.multiply(BigDecimal.valueOf(Days.daysBetween(startDate, endDate.plusDays(-1)).getDays())).setScale(4, RoundingMode.HALF_UP));
+							.multiply(BigDecimal.valueOf(Days.daysBetween(startDate, endDate.plusDays(-1)).getDays())).setScale(2, RoundingMode.HALF_UP));
 					BigDecimal tmpInt = newComputeService.calcTieredAmount(tables.get(0).tierInd, dailyRates, principalAmount, principalAmount)
-							.multiply(BigDecimal.valueOf(Days.daysBetween(endDate.plusDays(-1), endDate).getDays())).setScale(4, RoundingMode.HALF_UP);
+							.multiply(BigDecimal.valueOf(Days.daysBetween(endDate.plusDays(-1), endDate).getDays())).setScale(2, RoundingMode.HALF_UP);
 					intAmt = intAmt.add(tmpInt);
 				}
 				// 提前还款当期计息标准为按结息周期靠前，取原还款计划该期的利息作为应还利息
@@ -979,16 +979,16 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		for (PaymentPlanDetail detail : detailsMap.values()) {
 			// detail.setFeeAmt(detail.getFeeAmt().setScale(2,
 			// RoundingMode.HALF_UP));
-			detail.setInterestAmt(detail.getInterestAmt().setScale(4, RoundingMode.HALF_UP));
-			detail.setPenalizedAmt(detail.getPenalizedAmt().setScale(4, RoundingMode.HALF_UP));
-			detail.setPrincipalBal(detail.getPrincipalBal().setScale(4, RoundingMode.HALF_UP));
+			detail.setInterestAmt(detail.getInterestAmt().setScale(2, RoundingMode.HALF_UP));
+			detail.setPenalizedAmt(detail.getPenalizedAmt().setScale(2, RoundingMode.HALF_UP));
+			detail.setPrincipalBal(detail.getPrincipalBal().setScale(2, RoundingMode.HALF_UP));
 
 			// 修正剩余贷款本金:累加所有还款计划中的未还本金
 			paymentPlan.setLeftLoanPrincipalAmt(paymentPlan.getLeftLoanPrincipalAmt().add(detail.getPrincipalBal()));
 
 			detail.setTotalRepayAmt(detail.getInterestAmt()
 					// .add(detail.getFeeAmt())
-					.add(detail.getPenalizedAmt()).add(detail.getPrincipalBal()).setScale(4, RoundingMode.HALF_UP));
+					.add(detail.getPenalizedAmt()).add(detail.getPrincipalBal()).setScale(2, RoundingMode.HALF_UP));
 
 			if (detail.getTotalRepayAmt().compareTo(BigDecimal.ZERO) > 0) {
 				paymentPlan.setLeftLoanPeriod(paymentPlan.getLeftLoanPeriod() + 1);
