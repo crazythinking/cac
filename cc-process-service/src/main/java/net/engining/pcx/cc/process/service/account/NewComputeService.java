@@ -947,7 +947,7 @@ public class NewComputeService {
 		sa.minPaymentRates.put(9, BigDecimal.ONE);
 		sa.overlimitQualify = true;
 		sa.effectiveDate = subAcct.effectiveDate;
-		sa.penalizedInterestPastDuePostCode = "IB000055";
+		sa.penalizedInterestPastDuePostCode = "IB000045";
 		sa.penalizedInterestTable = "Z0001";
 		sa.planPurgeDays = 30;
 		sa.postponeDays = 0;
