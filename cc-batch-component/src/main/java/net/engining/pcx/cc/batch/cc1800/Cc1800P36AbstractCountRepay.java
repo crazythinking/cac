@@ -49,7 +49,7 @@ public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc180
 	@Value("#{new org.joda.time.LocalDate(jobParameters['batchDate'].time)}")
 	private LocalDate batchDate;
 	
-	@Value("#{new java.util.Date(jobParameters['businessDate'].time)}")
+	@Value("#{new java.util.Date(jobParameters['bizDate'].time)}")
 	private Date businessDate;
 	
 	@Autowired

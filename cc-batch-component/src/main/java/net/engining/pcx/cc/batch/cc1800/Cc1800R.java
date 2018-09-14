@@ -45,7 +45,7 @@ public class Cc1800R extends AbstractKeyBasedStreamReader<String, Cc1800IPosting
 		return new JPAQueryFactory(em)
 				.select(qCactAccount.custId)
 				.from(qCactAccount)
-				.where(qCactAccount.setupDate.loe(batchDate))
+				.where(qCactAccount.bizDate.loe(batchDate))
 				.groupBy(qCactAccount.custId)
 				.orderBy(qCactAccount.custId.asc())
 				.fetch();
@@ -62,7 +62,7 @@ public class Cc1800R extends AbstractKeyBasedStreamReader<String, Cc1800IPosting
 				.from(qCactAccount)
 				.where(
 						qCactAccount.custId.eq(key)
-						.and(qCactAccount.setupDate.loe(batchDate)))
+						.and(qCactAccount.bizDate.loe(batchDate)))
 				.orderBy(qCactAccount.acctNo.asc())
 				.fetch();
 		Map< Integer, List<Cc1800IAccountInfo>> accountList = new HashMap<Integer, List<Cc1800IAccountInfo>>();

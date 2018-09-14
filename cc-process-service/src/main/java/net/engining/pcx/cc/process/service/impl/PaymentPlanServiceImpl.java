@@ -291,8 +291,6 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			paymentPlan.setLeftLoanPeriod(plan.getLeftLoanPeriod());
 			paymentPlan.setLeftLoanPrincipalAmt(plan.getLeftLoanPrincipalAmt());
 			paymentPlan.setPostDate(plan.getPostDate());
-			paymentPlan.setSetupDate(saveDate);
-			paymentPlan.setLastUpdateDate(saveDate);
 			paymentPlan.setBizDate(provider7x24.getCurrentDate().toDate());
 			paymentPlan.fillDefaultValues();
 			em.persist(paymentPlan);
@@ -614,7 +612,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 
 		PaymentPlan paymentPlan = null;
 		// 等额本息需要根据还款情况重新生成还款计划，所以这种还款方式重修还款计划时需要以原始的还款计划为基础结构；且还款冲销时需要同时更新cc的静态还款计划
-		if (account.paymentMethod == PaymentMethod.MSV || account.paymentMethod.equals(PaymentMethod.MSF)
+		if (account.paymentMethod.equals(PaymentMethod.MSV) || account.paymentMethod.equals(PaymentMethod.MSF)
 				|| account.paymentMethod.equals(PaymentMethod.MSB)) {
 			paymentPlan = getPaymentPlan(acctSeq);
 		}
@@ -679,7 +677,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			}
 			// 上面的逻辑不清除还款计划的每期本金，因为本金不会变；
 			// 但是还款方式为等额本息类型时，每期应还本金也要清空，已经发生期数的还款计划根据子账户修，未发生的根据剩余本金重新计算。
-			if (account.paymentMethod == PaymentMethod.MSV || account.paymentMethod.equals(PaymentMethod.MSF)
+			if (account.paymentMethod.equals(PaymentMethod.MSV) || account.paymentMethod.equals(PaymentMethod.MSF)
 					|| account.paymentMethod.equals(PaymentMethod.MSB)) {
 				paymentPlanDetail.setPrincipalBal(BigDecimal.ZERO);
 			}
@@ -741,7 +739,6 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 					// 计算利息的金额基数
 					BigDecimal principalAmount = provider7x24.getBalance(cactSubAcct);
 					// 等本等息类型的特殊逻辑：用全部贷款本金计算
-					
 					if (account.paymentMethod == PaymentMethod.PSV && principalAmount.compareTo(BigDecimal.ZERO) != 0) {
 						principalAmount = cactAccount.getTotalLoanPrincipalAmt();
 					}

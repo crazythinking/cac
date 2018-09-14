@@ -147,7 +147,6 @@ public class NewPostService
 		cactTxnPost.setAgeCdB4Posting(cactAccount.getAgeCd()); //入账前账龄
 		cactTxnPost.setTxnType(detail.getTxnType());
 		cactTxnPost.setOppAcct(detail.getOppAcct());
-		cactTxnPost.setLastUpdateDate(new Date());
 		cactTxnPost.setBizDate(provider7x24.getCurrentDate().toDate());
 		cactTxnPost.fillDefaultValues();
 		em.persist(cactTxnPost);

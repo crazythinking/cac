@@ -160,8 +160,8 @@ public class NewInterestService
 		BigDecimal interestAmount = BigDecimal.ZERO;
 		boolean hasProcessed = false;		//记录是否计息成功
 
-		checkArgument(startDate.compareTo(endDate) <= 0);
-		checkArgument(!interestTables.isEmpty());
+		checkArgument(startDate.compareTo(endDate) <= 0, "利息计算的startDate不可大于endDate");
+		checkArgument(!interestTables.isEmpty(), "利息计算的interestTables不可为空");
 		checkArgument(restMethod != InterestCycleRestMethod.Recursive, "暂不支持递归靠档");
 
 		// 处理剩余的周期进行靠档
