@@ -40,9 +40,9 @@ CREATE TABLE CACT_ACCOUNT
 	ACCT_NO int COMMENT '账号',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.BusinessType
-	BUSINESS_TYPE char(2) NOT NULL COMMENT '业务类型 : ///
+	BUSINESS_TYPE varchar(2) NOT NULL COMMENT '业务类型 : ///
 @net.engining.gm.infrastructure.enums.BusinessType',
-	CURR_CD char(3) NOT NULL COMMENT '币种',
+	CURR_CD varchar(3) NOT NULL COMMENT '币种',
 	ACCT_LIMIT decimal(18,2) COMMENT '账户额度',
 	-- 当前欠款（负值表示有溢缴款）
 	CURR_BAL decimal(18,2) NOT NULL COMMENT '当前余额 : 当前欠款（负值表示有溢缴款）',
@@ -52,9 +52,9 @@ CREATE TABLE CACT_ACCOUNT
 	-- 持卡人还清该欠款，则会对账户进行全额还款免息，该金额会显示在账单上，小于等于账户账单余额
 	QUAL_GRACE_BAL decimal(18,2) NOT NULL COMMENT '全部应还款额 : 持卡人还清该欠款，则会对账户进行全额还款免息，该金额会显示在账单上，小于等于账户账单余额',
 	-- !!!java.lang.Boolean!!!
-	GRACE_DAYS_FULL_IND bit(1) NOT NULL COMMENT '是否已全额还款 : !!!java.lang.Boolean!!!',
+	GRACE_DAYS_FULL_IND char(1) NOT NULL COMMENT '是否已全额还款 : !!!java.lang.Boolean!!!',
 	-- 用户设定的循环信用账户的结息日。
-	BILLING_CYCLE char(2) NOT NULL COMMENT '账单周期 : 用户设定的循环信用账户的结息日。',
+	BILLING_CYCLE varchar(2) NOT NULL COMMENT '账单周期 : 用户设定的循环信用账户的结息日。',
 	BLOCK_CODE varchar(27) COMMENT '锁定码',
 	-- 实体账单不需要显示此域（但可以用作账单拖欠信息提醒）， 联机账单需要
 	AGE_CD char(1) COMMENT '账龄 : 实体账单不需要显示此域（但可以用作账单拖欠信息提醒）， 联机账单需要',
@@ -101,7 +101,7 @@ CREATE TABLE CACT_ACCOUNT
 	PAYMENT_HIST varchar(24) NOT NULL COMMENT '还款历史信息 : 每个月一个值,循环存放
 取值为net.engining.pcx.cc.infrastructure.shared.enums.PaymentStatus',
 	-- !!!java.lang.Boolean!!!
-	WAIVE_LATEFEE_IND bit(1) NOT NULL COMMENT '是否免除滞纳金 : !!!java.lang.Boolean!!!',
+	WAIVE_LATEFEE_IND char(1) NOT NULL COMMENT '是否免除滞纳金 : !!!java.lang.Boolean!!!',
 	CUST_ID varchar(64) NOT NULL COMMENT '客户编号',
 	OWNING_BRANCH varchar(9) NOT NULL COMMENT '发卡网点',
 	-- -1表示无穷大。
@@ -193,7 +193,7 @@ CREATE TABLE CACT_ADJ_CUST_ACCT_OPR_HST
 	CARD_NO varchar(19) COMMENT '卡号(E账号)',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.BusinessType
-	BUSINESS_TYPE char(2) NOT NULL COMMENT '业务类型 : ///
+	BUSINESS_TYPE varchar(2) NOT NULL COMMENT '业务类型 : ///
 @net.engining.gm.infrastructure.enums.BusinessType',
 	SUB_ACCT_ID int NOT NULL COMMENT '子账户序号',
 	-- 对应参数子账户类型
@@ -245,9 +245,9 @@ CREATE TABLE CACT_CANCEL_REG
 	ACCT_NO int NOT NULL COMMENT '账号',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.BusinessType
-	BUSINESS_TYPE char(2) NOT NULL COMMENT '业务类型 : ///
+	BUSINESS_TYPE varchar(2) NOT NULL COMMENT '业务类型 : ///
 @net.engining.gm.infrastructure.enums.BusinessType',
-	CURR_CD char(3) NOT NULL COMMENT '币种',
+	CURR_CD varchar(3) NOT NULL COMMENT '币种',
 	CARD_NO varchar(19) NOT NULL COMMENT '卡号(E账号)',
 	CARD_GROUP_ID varchar(19) NOT NULL COMMENT '卡群组号',
 	-- ///
@@ -403,9 +403,9 @@ CREATE TABLE CACT_SUB_ACCT
 	SUBACCT_PARAM_ID varchar(30) NOT NULL COMMENT '子账户参数序号 : 子账户计价规则参数编号',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.BusinessType
-	BUSINESS_TYPE char(2) NOT NULL COMMENT '业务类型 : ///
+	BUSINESS_TYPE varchar(2) NOT NULL COMMENT '业务类型 : ///
 @net.engining.gm.infrastructure.enums.BusinessType',
-	CURR_CD char(3) NOT NULL COMMENT '币种',
+	CURR_CD varchar(3) NOT NULL COMMENT '币种',
 	-- 当期为0，第一次入账单为1，以后每个账单日增加1
 	STMT_HIST int NOT NULL COMMENT '账期 : 当期为0，第一次入账单为1，以后每个账单日增加1',
 	BEGIN_BAL decimal(18,2) NOT NULL COMMENT '期初余额',
@@ -449,7 +449,7 @@ CREATE TABLE CACT_TXN_HST
 	SUBACCT_PARAM_ID varchar(30) COMMENT '子账户参数序号 : 子账户计价规则参数编号',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.BusinessType
-	BUSINESS_TYPE char(2) NOT NULL COMMENT '业务类型 : ///
+	BUSINESS_TYPE varchar(2) NOT NULL COMMENT '业务类型 : ///
 @net.engining.gm.infrastructure.enums.BusinessType',
 	CARD_NO varchar(19) COMMENT '卡号(E账号)',
 	CARD_GROUP_ID varchar(19) COMMENT '卡群组号',
@@ -491,21 +491,21 @@ RefTally|退款记账',
 	TXN_AMT decimal(18,2) NOT NULL COMMENT '交易金额',
 	POST_AMT decimal(18,2) NOT NULL COMMENT '入账金额',
 	POST_DATE date NOT NULL COMMENT '入账日期',
-	AUTH_CODE char(6) COMMENT '授权码',
-	TXN_CURR_CD char(3) NOT NULL COMMENT '交易币种代码',
+	AUTH_CODE varchar(6) COMMENT '授权码',
+	TXN_CURR_CD varchar(3) NOT NULL COMMENT '交易币种代码',
 	-- 清算货币码
-	POST_CURR_CD char(3) NOT NULL COMMENT '入账币种代码 : 清算货币码',
+	POST_CURR_CD varchar(3) NOT NULL COMMENT '入账币种代码 : 清算货币码',
 	REF_NBR varchar(23) COMMENT '交易参考号',
 	TXN_DESC varchar(400) COMMENT '交易描述',
 	-- 用于账单交易描述显示
 	TXN_SHORT_DESC varchar(40) COMMENT '账单交易描述 : 用于账单交易描述显示',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag
-	POSTING_FLAG char(3) NOT NULL COMMENT '入账结果标示码 : ///
+	POSTING_FLAG varchar(3) NOT NULL COMMENT '入账结果标示码 : ///
 @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag
-	PRE_POSTING_FLAG char(3) COMMENT '往日入账结果标示码 : ///
+	PRE_POSTING_FLAG varchar(3) COMMENT '往日入账结果标示码 : ///
 @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag',
 	-- 受理分行代码
 	ACQ_BRANCH_ID varchar(11) COMMENT '受理分行代码 : 受理分行代码',
@@ -515,7 +515,7 @@ RefTally|退款记账',
 	ACQ_ACCEPTOR_ID varchar(15) COMMENT '受卡方标识码 : 受理机构标识码',
 	-- 受卡点（商户）名称，地址
 	MERCHANT_NAME_ADDR varchar(40) COMMENT '商户名称地址 : 受卡点（商户）名称，地址',
-	MCC char(4) COMMENT '商户类别代码',
+	MCC varchar(4) COMMENT '商户类别代码',
 	STMT_DATE date COMMENT '账单日期',
 	-- 入账前，当前账户的账龄，用于账龄发生变化时会计科目的结转。
 	AGE_CD_B4_POSTING char(1) COMMENT '入账前账龄 : 入账前，当前账户的账龄，用于账龄发生变化时会计科目的结转。',
@@ -590,7 +590,7 @@ CREATE TABLE CACT_TXN_POST
 	SUBACCT_PARAM_ID varchar(30) COMMENT '子账户参数序号 : 子账户计价规则参数编号',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.BusinessType
-	BUSINESS_TYPE char(2) COMMENT '业务类型 : ///
+	BUSINESS_TYPE varchar(2) COMMENT '业务类型 : ///
 @net.engining.gm.infrastructure.enums.BusinessType',
 	CARD_NO varchar(19) COMMENT '卡号(E账号)',
 	CARD_GROUP_ID varchar(19) COMMENT '卡群组号',
@@ -632,21 +632,21 @@ RefTally|退款记账',
 	TXN_AMT decimal(18,2) NOT NULL COMMENT '交易金额',
 	POST_AMT decimal(18,2) NOT NULL COMMENT '入账金额',
 	POST_DATE date NOT NULL COMMENT '入账日期',
-	AUTH_CODE char(6) COMMENT '授权码',
-	TXN_CURR_CD char(3) NOT NULL COMMENT '交易币种代码',
+	AUTH_CODE varchar(6) COMMENT '授权码',
+	TXN_CURR_CD varchar(3) NOT NULL COMMENT '交易币种代码',
 	-- 清算货币码
-	POST_CURR_CD char(3) NOT NULL COMMENT '入账币种代码 : 清算货币码',
+	POST_CURR_CD varchar(3) NOT NULL COMMENT '入账币种代码 : 清算货币码',
 	REF_NBR varchar(23) COMMENT '交易参考号',
 	TXN_DESC varchar(400) COMMENT '交易描述',
 	-- 用于账单交易描述显示
 	TXN_SHORT_DESC varchar(40) COMMENT '账单交易描述 : 用于账单交易描述显示',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag
-	POSTING_FLAG char(3) NOT NULL COMMENT '入账结果标示码 : ///
+	POSTING_FLAG varchar(3) NOT NULL COMMENT '入账结果标示码 : ///
 @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag
-	PRE_POSTING_FLAG char(3) COMMENT '往日入账结果标示码 : ///
+	PRE_POSTING_FLAG varchar(3) COMMENT '往日入账结果标示码 : ///
 @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag',
 	-- 受理分行代码
 	ACQ_BRANCH_ID varchar(11) COMMENT '受理分行代码 : 受理分行代码',
@@ -656,7 +656,7 @@ RefTally|退款记账',
 	ACQ_ACCEPTOR_ID varchar(15) COMMENT '受卡方标识码 : 受理机构标识码',
 	-- 受卡点（商户）名称，地址
 	MERCHANT_NAME_ADDR varchar(40) COMMENT '商户名称地址 : 受卡点（商户）名称，地址',
-	MCC char(4) COMMENT '商户类别代码',
+	MCC varchar(4) COMMENT '商户类别代码',
 	STMT_DATE date COMMENT '账单日期',
 	-- 入账前，当前账户的账龄，用于账龄发生变化时会计科目的结转。
 	AGE_CD_B4_POSTING char(1) COMMENT '入账前账龄 : 入账前，当前账户的账龄，用于账龄发生变化时会计科目的结转。',
@@ -730,7 +730,7 @@ CREATE TABLE CACT_TXN_REJECT
 	SUBACCT_PARAM_ID varchar(30) COMMENT '子账户参数序号 : 子账户计价规则参数编号',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.BusinessType
-	BUSINESS_TYPE char(2) COMMENT '业务类型 : ///
+	BUSINESS_TYPE varchar(2) COMMENT '业务类型 : ///
 @net.engining.gm.infrastructure.enums.BusinessType',
 	CARD_NO varchar(19) COMMENT '卡号(E账号)',
 	CARD_GROUP_ID varchar(19) COMMENT '卡群组号',
@@ -774,21 +774,21 @@ RefTally|退款记账',
 	TXN_AMT decimal(18,2) NOT NULL COMMENT '交易金额',
 	POST_AMT decimal(18,2) NOT NULL COMMENT '入账金额',
 	POST_DATE date NOT NULL COMMENT '入账日期',
-	AUTH_CODE char(6) COMMENT '授权码',
-	TXN_CURR_CD char(3) NOT NULL COMMENT '交易币种代码',
+	AUTH_CODE varchar(6) COMMENT '授权码',
+	TXN_CURR_CD varchar(3) NOT NULL COMMENT '交易币种代码',
 	-- 清算货币码
-	POST_CURR_CD char(3) NOT NULL COMMENT '入账币种代码 : 清算货币码',
+	POST_CURR_CD varchar(3) NOT NULL COMMENT '入账币种代码 : 清算货币码',
 	REF_NBR varchar(23) COMMENT '交易参考号',
 	TXN_DESC varchar(400) COMMENT '交易描述',
 	-- 用于账单交易描述显示
 	TXN_SHORT_DESC varchar(40) COMMENT '账单交易描述 : 用于账单交易描述显示',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag
-	POSTING_FLAG char(3) COMMENT '入账结果标示码 : ///
+	POSTING_FLAG varchar(3) COMMENT '入账结果标示码 : ///
 @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag
-	PRE_POSTING_FLAG char(3) COMMENT '往日入账结果标示码 : ///
+	PRE_POSTING_FLAG varchar(3) COMMENT '往日入账结果标示码 : ///
 @net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag',
 	-- 公司卡还款金额
 	REL_PMT_AMT decimal(18,2) COMMENT '公司卡还款金额 : 公司卡还款金额',
@@ -800,7 +800,7 @@ RefTally|退款记账',
 	ACQ_ACCEPTOR_ID varchar(15) COMMENT '受卡方标识码 : 受理机构标识码',
 	-- 受卡点（商户）名称，地址
 	MERCHANT_NAME_ADDR varchar(40) COMMENT '商户名称地址 : 受卡点（商户）名称，地址',
-	MCC char(4) COMMENT '商户类别代码',
+	MCC varchar(4) COMMENT '商户类别代码',
 	STMT_DATE date COMMENT '账单日期',
 	-- 入账前，当前账户的账龄，用于账龄发生变化时会计科目的结转。
 	AGE_CD_B4_POSTING char(1) COMMENT '入账前账龄 : 入账前，当前账户的账龄，用于账龄发生变化时会计科目的结转。',
