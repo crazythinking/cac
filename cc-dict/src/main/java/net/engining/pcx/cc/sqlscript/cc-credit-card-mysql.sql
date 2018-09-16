@@ -952,7 +952,7 @@ CREATE TABLE CACT_TXN_UNSTMT
 	-- 入账成功后，当前账户的账龄，用于账龄发生变化时会计科目的结转。
 	AGE_CD_AFTER_POSTING char(1) COMMENT '入账后账龄 : 入账成功后，当前账户的账龄，用于账龄发生变化时会计科目的结转。',
 	ACCT_CURR_BAL decimal(18,2) COMMENT '账户当前余额',
-	TXN_DETAIL_SEQ int COMMENT '来源交易流水号',
+	TXN_DETAIL_SEQ varchar(64) COMMENT '来源交易流水号',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType
 	TXN_DETAIL_TYPE char(1) COMMENT '来源交易流水类型 : ///

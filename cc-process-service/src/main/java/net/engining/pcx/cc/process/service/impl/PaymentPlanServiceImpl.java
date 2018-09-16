@@ -994,7 +994,6 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		}
 
 		judgePersistPaymentPlan(acctSeq, cactAccount.getCustId(), cactAccount.getAcctParamId(), paymentPlan, paymentPlan.getCreateDate());
-//		modifyPaymentPlan(paymentPlan, cactAccount, firstFlag);
 
 		for (PaymentPlanDetail paymentPlanDetail : paymentPlan.getDetailsMap().values()) {
 			logger.info("日期{},期数{},应还总金额{},应还本金{},应还利息{},应还罚息{}", paymentPlanDetail.getPaymentDate(), paymentPlanDetail.getLoanPeriod(),
