@@ -52,7 +52,7 @@ CREATE TABLE CACT_ACCOUNT
 	-- 持卡人还清该欠款，则会对账户进行全额还款免息，该金额会显示在账单上，小于等于账户账单余额
 	QUAL_GRACE_BAL decimal(18,2) NOT NULL COMMENT '全部应还款额 : 持卡人还清该欠款，则会对账户进行全额还款免息，该金额会显示在账单上，小于等于账户账单余额',
 	-- !!!java.lang.Boolean!!!
-	GRACE_DAYS_FULL_IND char(1) NOT NULL COMMENT '是否已全额还款 : !!!java.lang.Boolean!!!',
+	GRACE_DAYS_FULL_IND varchar(5) NOT NULL COMMENT '是否已全额还款 : !!!java.lang.Boolean!!!',
 	-- 用户设定的循环信用账户的结息日。
 	BILLING_CYCLE varchar(2) NOT NULL COMMENT '账单周期 : 用户设定的循环信用账户的结息日。',
 	BLOCK_CODE varchar(27) COMMENT '锁定码',
@@ -101,7 +101,7 @@ CREATE TABLE CACT_ACCOUNT
 	PAYMENT_HIST varchar(24) NOT NULL COMMENT '还款历史信息 : 每个月一个值,循环存放
 取值为net.engining.pcx.cc.infrastructure.shared.enums.PaymentStatus',
 	-- !!!java.lang.Boolean!!!
-	WAIVE_LATEFEE_IND char(1) NOT NULL COMMENT '是否免除滞纳金 : !!!java.lang.Boolean!!!',
+	WAIVE_LATEFEE_IND varchar(5) NOT NULL COMMENT '是否免除滞纳金 : !!!java.lang.Boolean!!!',
 	CUST_ID varchar(64) NOT NULL COMMENT '客户编号',
 	OWNING_BRANCH varchar(9) NOT NULL COMMENT '发卡网点',
 	-- -1表示无穷大。
@@ -122,8 +122,7 @@ CREATE TABLE CACT_ACCOUNT
 	TOTAL_LOAN_PRINCIPAL_AMT decimal(18,2) COMMENT '贷款总金额 : 贷款总金额，只有当前贷款期数=0的时候才更新。',
 	-- 在系统内，贷款账户自动扣款的活期账户，优先级最高。
 	AUTO_PAY_ACCT_SEQ_IN_SYSTEM int COMMENT '系统内自动扣款账号 : 在系统内，贷款账户自动扣款的活期账户，优先级最高。',
-	-- $$$@CreatedDate$$$
-	SETUP_DATE timestamp DEFAULT NOW() NOT NULL COMMENT '创建日期 : $$$@CreatedDate$$$',
+	SETUP_DATE date NOT NULL COMMENT '建账日期',
 	-- $$$@LastModifiedDate$$$
 	LAST_UPDATE_DATE timestamp DEFAULT NOW() NOT NULL COMMENT '最后更新日期 : $$$@LastModifiedDate$$$',
 	BIZ_DATE date NOT NULL COMMENT '系统业务日期',
@@ -427,8 +426,7 @@ CREATE TABLE CACT_SUB_ACCT
 	INT_PENALTY_ACCRUAL decimal(18,2) COMMENT '罚息计提',
 	LAST_ACCRUALINTEPENALTY_DATE date COMMENT '上次罚息计提日期',
 	ADDUP_AMT decimal(18,2) COMMENT '当日积数',
-	-- $$$@CreatedDate$$$
-	SETUP_DATE timestamp DEFAULT NOW() NOT NULL COMMENT '创建日期 : $$$@CreatedDate$$$',
+	SETUP_DATE date NOT NULL COMMENT '建账日期',
 	-- $$$@LastModifiedDate$$$
 	LAST_UPDATE_DATE timestamp DEFAULT NOW() NOT NULL COMMENT '最后更新日期 : $$$@LastModifiedDate$$$',
 	BIZ_DATE date NOT NULL COMMENT '系统业务日期',
