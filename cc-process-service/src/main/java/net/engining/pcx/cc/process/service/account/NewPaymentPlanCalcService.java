@@ -210,8 +210,8 @@ public class NewPaymentPlanCalcService {
 			}
 
 		} else {// 按周期计息的情况
-			if (paymentMethod == PaymentMethod.PSV) {// 等本等息的利息全部是按贷款总金额计算 (TODO
-														// 这里可能是业务特殊性造成的，到底是否按贷款总额计算，网上没有找到标准)
+			// 等本等息的利息全部是按贷款总金额计算 (TODO 这里可能是业务特殊性造成的，到底是否按贷款总额计算，网上没有找到标准)
+			if (paymentMethod == PaymentMethod.PSV || paymentMethod == PaymentMethod.PSZ) {
 				detail.setInterestAmt(
 						newComputeService.calcTieredAmount(interestParam.tierInd, calcRates, loanAmount, loanAmount)
 								.multiply(BigDecimal.valueOf(mult))

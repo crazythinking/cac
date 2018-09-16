@@ -148,6 +148,15 @@ public class NewAgeService
 		else if (ageCd.compareTo("1") >= 0 && ageCd.compareTo("3") <= 0) {
 			group = AgeGroupCd.Attention;
 		}
+		else if (ageCd.compareTo("4") == 0) {
+			group = AgeGroupCd.Secondary;
+		}
+		else if (ageCd.compareTo("5") >= 0 && ageCd.compareTo("6") <= 0) {
+			group = AgeGroupCd.Suspicious;
+		}
+		else if (ageCd.compareTo("7") >= 0 && ageCd.compareTo("13") <= 0) {
+			group = AgeGroupCd.Loss;
+		}
 		else {
 			group = AgeGroupCd.Above4M3;
 		}
