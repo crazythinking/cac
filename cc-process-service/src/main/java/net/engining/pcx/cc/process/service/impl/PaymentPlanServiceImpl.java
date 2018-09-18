@@ -707,6 +707,11 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			BigDecimal intAmt = BigDecimal.ZERO;
 			SubAcct subAcct = newComputeService.retrieveSubAcct(cactSubAcct, cactAccount);
 			Integer period = cactAccount.getCurrentLoanPeriod() + 1 - cactSubAcct.getStmtHist();
+			//fix bug 2018-9-18: 由于LOAN的cactSubAcct.getStmtHist()也会在结息日升账期，几乎与cactAccount.getCurrentLoanPeriod()同步；
+			//所以这里的逻辑并不能获得该LOAN的CactSubAcct正所属哪一期，而其他CactSubAcct不会有此问题;
+			if("LOAN".equals(cactSubAcct.getSubAcctType())){
+				period = cactAccount.getCurrentLoanPeriod() + 1;
+			}
 			// 最后一期以后产生的利息、罚息，并入最后一期
 			if (period > cactAccount.getTotalLoanPeriod()) {
 				period = cactAccount.getTotalLoanPeriod();
@@ -724,6 +729,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			// 累加所有未结利息，将其计入当前期数的应收利息
 			if (cactSubAcct.getIntReceivable().compareTo(BigDecimal.ZERO) > 0) {
 				intAmt = intAmt.add(cactSubAcct.getIntReceivable());
+				intAmts.put(period,intAmt);
 			}
 			
 			// ======================以下逻辑针对未到结息日时，确定是否需要临时计算当前未结利息
@@ -756,9 +762,14 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				}
 				// 提前还款当期计息标准为按结息周期靠前，取原还款计划该期的利息作为应还利息
 				else if(PrePaySettlementType.M.equals(account.advanceType)){
-					// 获取改期的原始还款计划明细；period从1开始，所以-1
-					BigDecimal tmpInt = paymentPlan.getDetails().get(period-1).getOrigInterestAmt();
-					intAmt = intAmt.add(tmpInt);
+					// 获取该期的原始还款计划明细的该期原始利息；period从1开始，所以-1
+					if("LOAN".equals(cactSubAcct.getSubAcctType())){
+						BigDecimal tmpInt = paymentPlan.getDetails().get(period-1).getOrigInterestAmt();
+						intAmt = intAmt.add(tmpInt);
+					}
+					//FIXME 2018-9-18: 直接从原始计划里取只针对LOAN是正确的，因为原始还款计划计算的利息，只是按LOAN计算的；
+					//然而对于其他类型的SubAcct，是结转后产生的，原始计划不可能针对这些SubAcct产生利息，因此需要按周期进行计算；
+					
 				}
 				else{
 					logger.debug("cactAccount[{}]，该笔贷款的提前还款当期计息标准参数为按还款计划不变，无需计算",cactAccount.getAcctSeq());
@@ -787,12 +798,12 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				loanPrincipal = loanPrincipal.add(cactSubAcct.getCurrBal());
 			}
 
-			// 修正历史应还利息
+			// 修正应还利息
 			if (cactSubAcct.getSubAcctType().equals("INTE") && cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
 				detailsMap.get(period).setInterestAmt(detailsMap.get(period).getInterestAmt().add(cactSubAcct.getCurrBal()));
 			}
 
-			// 修正历史应还费用
+			// 修正应还费用
 //			if (cactSubAcct.getSubAcctType().equals("SFEE") && cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
 //				detailsMap.get(period).setFeeAmt(detailsMap.get(period).getFeeAmt().add(cactSubAcct.getCurrBal()));
 //			}
