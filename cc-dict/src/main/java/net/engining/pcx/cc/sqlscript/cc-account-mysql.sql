@@ -122,7 +122,8 @@ CREATE TABLE CACT_ACCOUNT
 	TOTAL_LOAN_PRINCIPAL_AMT decimal(18,2) COMMENT '贷款总金额 : 贷款总金额，只有当前贷款期数=0的时候才更新。',
 	-- 在系统内，贷款账户自动扣款的活期账户，优先级最高。
 	AUTO_PAY_ACCT_SEQ_IN_SYSTEM int COMMENT '系统内自动扣款账号 : 在系统内，贷款账户自动扣款的活期账户，优先级最高。',
-	SETUP_DATE date NOT NULL COMMENT '建账日期',
+	START_DATE date COMMENT '账户创建自然日',
+	SETUP_DATE date NOT NULL COMMENT '建账业务日',
 	-- $$$@LastModifiedDate$$$
 	LAST_UPDATE_DATE timestamp DEFAULT NOW() NOT NULL COMMENT '最后更新日期 : $$$@LastModifiedDate$$$',
 	BIZ_DATE date NOT NULL COMMENT '系统业务日期',
@@ -429,7 +430,7 @@ CREATE TABLE CACT_SUB_ACCT
 	INT_PENALTY_ACCRUAL decimal(18,2) COMMENT '罚息计提',
 	LAST_ACCRUALINTEPENALTY_DATE date COMMENT '上次罚息计提日期',
 	ADDUP_AMT decimal(18,2) COMMENT '当日积数',
-	SETUP_DATE date NOT NULL COMMENT '建账日期',
+	SETUP_DATE date NOT NULL COMMENT '建账业务日',
 	-- $$$@LastModifiedDate$$$
 	LAST_UPDATE_DATE timestamp DEFAULT NOW() NOT NULL COMMENT '最后更新日期 : $$$@LastModifiedDate$$$',
 	BIZ_DATE date NOT NULL COMMENT '系统业务日期',

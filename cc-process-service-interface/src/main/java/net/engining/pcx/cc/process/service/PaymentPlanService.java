@@ -23,6 +23,8 @@ public interface PaymentPlanService {
 	/**
 	 * 生成还款计划
 	 * 
+	 * @param loanStartDate
+	 *            账户创建自然日
 	 * @param totalPeriod
 	 *            期数
 	 * @param interval
@@ -49,13 +51,15 @@ public interface PaymentPlanService {
 	 *            到期还款天数
 	 * @return
 	 */
-	public PaymentPlan regPaymentPlan(Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
+	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
 			BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
 			BigDecimal feeAmount, BigDecimal feeRate, Date postDate, int pmtDueDays);
 	
 	/**
 	 * 生成还款计划
 	 * 
+	 * @param loanStartDate
+	 *            账户创建自然日
 	 * @param totalPeriod
 	 *            期数
 	 * @param interval
@@ -84,13 +88,15 @@ public interface PaymentPlanService {
 	 *            固定还款日
 	 * @return
 	 */
-	public PaymentPlan regPaymentPlan(Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
+	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
 			BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
 			BigDecimal feeAmount, BigDecimal feeRate, Date postDate, Boolean intFirstPeriodAdj, int fixedPmtDay);
 
 	/**
 	 * 生成还款计划
 	 * 
+	 * @param loanStartDate
+	 *            账户创建自然日
 	 * @param totalPeriod
 	 *            期数
 	 * @param interval
@@ -121,7 +127,7 @@ public interface PaymentPlanService {
 	 *            固定还款日
 	 * @return
 	 */
-	public PaymentPlan regPaymentPlan(Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
+	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
 			BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
 			BigDecimal feeAmount, BigDecimal feeRate, Date postDate, int pmtDueDays, Boolean intFirstPeriodAdj, int fixedPmtDay);
 	

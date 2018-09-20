@@ -91,7 +91,7 @@ public class AccountManageServiceImpl implements AccountManageService{
 	 */
 	@Override
 	public int createAccount(AccountInfo acctInfo) {
-		SystemStatus system = systemStatusFacility.getSystemStatus();
+//		SystemStatus system = systemStatusFacility.getSystemStatus();
 		CactAccount acct = new CactAccount();
 		acct.setAcctNo(acctInfo.getAcctNo());
 		acct.setAcctParamId(acctInfo.getParamId());
@@ -102,6 +102,8 @@ public class AccountManageServiceImpl implements AccountManageService{
 //		else
 		//fix bug: 建账日期用系统BizDate
 		acct.setSetupDate(provider7x24.getCurrentDate().toDate());
+		//账户创建自然日用当前系统自然日期
+		acct.setStartDate(new Date());
 		
 		//获取账户参数
 		Account acctParam = paramFacility.loadParameter(Account.class, acct.getAcctParamId(), provider7x24.getCurrentDate().toDate());

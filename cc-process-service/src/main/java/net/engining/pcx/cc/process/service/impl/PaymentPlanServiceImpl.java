@@ -87,23 +87,23 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 	private QCactLoanPaymentDetail qLoanPaymentDetail = QCactLoanPaymentDetail.cactLoanPaymentDetail;
 
 	@Override
-	public PaymentPlan regPaymentPlan(Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod, BigDecimal loanAmount,
+	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod, BigDecimal loanAmount,
 			InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod, BigDecimal feeAmount, BigDecimal feeRate, Date postDate,
 			int pmtDueDays) {
-		return regPaymentPlan(totalPeriod, interval, mult, paymentMethod, loanAmount, it, loanFeeMethod, loanFeeCalcMethod, feeAmount, feeRate,
+		return regPaymentPlan(loanStartDate, totalPeriod, interval, mult, paymentMethod, loanAmount, it, loanFeeMethod, loanFeeCalcMethod, feeAmount, feeRate,
 				postDate, pmtDueDays, false, 0);
 	}
 
 	@Override
-	public PaymentPlan regPaymentPlan(Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod, BigDecimal loanAmount,
+	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod, BigDecimal loanAmount,
 			InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod, BigDecimal feeAmount, BigDecimal feeRate, Date postDate,
 			Boolean intFirstPeriodAdj, int fixedPmtDay) {
-		return regPaymentPlan(totalPeriod, interval, mult, paymentMethod, loanAmount, it, loanFeeMethod, loanFeeCalcMethod, feeAmount, feeRate,
+		return regPaymentPlan(loanStartDate, totalPeriod, interval, mult, paymentMethod, loanAmount, it, loanFeeMethod, loanFeeCalcMethod, feeAmount, feeRate,
 				postDate, 0, false, fixedPmtDay);
 	}
 
 	@Override
-	public PaymentPlan regPaymentPlan(Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod, BigDecimal loanAmount,
+	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod, BigDecimal loanAmount,
 			InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod, BigDecimal feeAmount, BigDecimal feeRate, Date postDate,
 			int pmtDueDays, Boolean intFirstPeriodAdj, int fixedPmtDay) {
 
@@ -170,10 +170,12 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			if (fixedPmtDay != 0 || fixedPmtDay > 31) {
 				// 确定fixedDate
 				detail = newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedPmtDay, mult, 0, i, detail);
+				detail = newPaymentPlanCalcService.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, fixedPmtDay, mult, 0, i, detail);
 				
 			}
 			else {
 				detail = newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, mult, pmtDueDays, i, detail);
+				detail = newPaymentPlanCalcService.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, mult, pmtDueDays, i, detail);
 			}
 
 			// 计算应收利息
@@ -626,6 +628,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			// 固定日还款
 			if (account.isLockPaymentDay) {
 				paymentPlan = regPaymentPlan(
+						cactAccount.getStartDate(),
 						cactAccount.getTotalLoanPeriod(), 
 						account.intUnit, 
 						account.intUnitMult, 
@@ -644,6 +647,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			}
 			else {
 				paymentPlan = regPaymentPlan(
+						cactAccount.getStartDate(),
 						cactAccount.getTotalLoanPeriod(), 
 						account.intUnit, 
 						account.intUnitMult, 
@@ -687,9 +691,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 					|| account.paymentMethod.equals(PaymentMethod.MSB)) {
 				paymentPlanDetail.setPrincipalBal(BigDecimal.ZERO);
 			}
-			//根据偏移量修正还款计划的还款日然日
-			Date natureDate = DateUtilsExt.addDays(paymentPlanDetail.getPaymentDate(), -(provider7x24.getOffset4BizDate2NatureDate(new LocalDate(cactAccount.getSetupDate()))));
-			paymentPlanDetail.setPaymentNatureDate(natureDate);
+			
 		}
 
 		// 每期的利息余额-按子账户为维度分别统计应计利息，四舍五入保留两位小数后，再相加汇总到当前一期的应还利息上，与结息步骤保持一致，否则会出现误差。
@@ -907,6 +909,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				
 				if(account.paymentMethod == PaymentMethod.MSV && account.paymentMethod == PaymentMethod.MSB){
 					recalculatePaymentPlan = regPaymentPlan(
+							cactAccount.getStartDate(),
 							cactAccount.getTotalLoanPeriod() - currentLoanPeriod - 1, 
 							account.intUnit,
 							account.intUnitMult, 
@@ -923,6 +926,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				}
 				else{// 固定日
 					recalculatePaymentPlan = regPaymentPlan(
+							cactAccount.getStartDate(),
 							cactAccount.getTotalLoanPeriod() - currentLoanPeriod - 1, 
 							account.intUnit,
 							account.intUnitMult, 
@@ -1171,9 +1175,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				paymentDate = cactAccount.getSetupDate();
 			paymentDate = newComputeService.getNextInterstDate(cactAccount, paymentDate, acctParam, cactAccount.getBillingCycle());
 			detail.setPaymentDate(paymentDate);
-			//根据偏移量计算还款计划的还款日然日
-			Date natureDate = DateUtilsExt.addDays(detail.getPaymentDate(), -(provider7x24.getOffset4BizDate2NatureDate(new LocalDate(cactAccount.getSetupDate()))));
-			detail.setPaymentNatureDate(natureDate);
+			
 			details.add(detail);
 			detailsMap.put(i, detail);
 		}

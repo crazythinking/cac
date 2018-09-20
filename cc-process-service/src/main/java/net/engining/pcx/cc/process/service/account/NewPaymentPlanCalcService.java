@@ -9,16 +9,20 @@ import java.util.List;
 import org.apache.commons.lang3.time.DateUtils;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
+import org.joda.time.PeriodType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import net.engining.gm.infrastructure.enums.Interval;
+import net.engining.pcx.cc.param.model.Account;
 import net.engining.pcx.cc.param.model.InterestTable;
 import net.engining.pcx.cc.param.model.RateCalcMethod;
 import net.engining.pcx.cc.param.model.enums.PaymentMethod;
 import net.engining.pcx.cc.process.model.PaymentPlanDetail;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.support.utils.DateUtilsExt;
+import net.engining.pg.support.utils.ValidateUtilExt;
 
 /**
  * 还款计划相关计算辅助服务
@@ -34,6 +38,125 @@ public class NewPaymentPlanCalcService {
 	
 	@Autowired
 	Provider7x24 provider7x24;
+	
+	/**
+	 * 根据系统业务日期计算与当前自然日的偏移量
+	 * @param bizDate
+	 * @param interval
+	 * @return n days or n week or n month or n year
+	 */
+	public int getOffset4BizDate2NatureDate(LocalDate bizDate, Interval interval) {
+		int offset = 0;
+		Period period = null;
+		LocalDate natureDate = new LocalDate(DateUtilsExt.truncate(new Date(), Calendar.DATE));
+		if(ValidateUtilExt.isNullOrEmpty(bizDate)){
+			bizDate = provider7x24.getCurrentDate();
+		}
+		switch (interval) {
+			case D:
+				//bizDate大于natureDate为负数，反之正数
+				period = new Period(bizDate, natureDate, PeriodType.days());
+				offset = period.getDays();
+				break;
+			case W:
+				//bizDate大于natureDate为负数，反之正数
+				period = new Period(bizDate, natureDate, PeriodType.weeks());
+				offset = period.getWeeks();
+				break;
+			case M:
+				//bizDate大于natureDate为负数，反之正数
+				period = new Period(bizDate, natureDate, PeriodType.months());
+				offset = period.getMonths();
+				break;
+			case Y:
+				//bizDate大于natureDate为负数，反之正数
+				period = new Period(bizDate, natureDate, PeriodType.years());
+				offset = period.getYears();
+				break;	
+		}
+		
+		return offset;
+	}
+	
+	public static void main(String[] args) {
+		LocalDate bizDate = new LocalDate(2018, 9, 22);
+		LocalDate natureDate = new LocalDate(2018, 9, 20);
+		Period period = new Period(bizDate, natureDate, PeriodType.days());
+		int offset = period.getDays();
+		System.out.println(offset);
+	}
+	
+	private Date caculatePaymentDate(Interval interval, Boolean intFirstPeriodAdj, PaymentMethod paymentMethod,
+			Date startDate, int fixedDay, Integer mult, int pmtDueDays, int i){
+		Date date = null;
+		switch (interval) {
+			case D:
+				if (intFirstPeriodAdj != null && intFirstPeriodAdj) {
+					date = DateUtils.addDays(DateUtils.addDays(startDate, mult * (i + 1)), pmtDueDays);
+				} else {
+					date = DateUtils.addDays(DateUtils.addDays(DateUtils.addDays(startDate, 0), mult * (i + 1)), pmtDueDays);
+				}
+				break;
+			case W:
+				date = DateUtils.addDays(DateUtils.addDays(startDate, mult * (i + 1) * 7), pmtDueDays);
+				break;
+			case M:
+				switch (paymentMethod) {
+				// TODO 待重构，增加固定日还款独立参数，不要通过还款方式区分，理论上，目前大部分支持分期的还款方式都可以支持固定日还款
+				case MRG:
+				case MSF:
+					if(fixedDay==0){
+						throw new IllegalArgumentException("固定还款日参数不可为0");
+					}
+					// 根据固定还款日计算方式，以28日作为分界，因为大小月的原因，业务上规定28日之后都以28日作为还款日
+					// 先计算固定还款日对应的日历
+					Calendar fixedCalendar = Calendar.getInstance();
+					fixedCalendar.setTime(startDate);
+					fixedDay = fixedDay >= 28 ? 28 : fixedDay;
+					fixedCalendar.set(fixedCalendar.get(Calendar.YEAR), fixedCalendar.get(Calendar.MONTH), fixedDay);
+					Date fixedDate = fixedCalendar.getTime();
+					//计算入账日对应的日历
+					Calendar postCalendar = Calendar.getInstance();
+					postCalendar.setTime(startDate);
+					
+					//假设每月固定5日还款;
+					//如果postDate=1月1日，那么第一次还款应该为1月5日；
+					//如果postDate=1月10日，那么第一次还款应该为2月5日；
+					if(i==0){
+						if( postCalendar.get(Calendar.DAY_OF_MONTH) <= fixedDay){
+							date = DateUtils.addDays(DateUtils.addMonths(fixedDate, mult * (i + 1)), pmtDueDays);
+						}
+						else{
+							date = DateUtils.addDays(DateUtils.addMonths(DateUtils.addMonths(fixedDate, 1), mult * (i + 1)), pmtDueDays);
+						}
+					}
+					else{
+						date = DateUtils.addDays(DateUtils.addMonths(fixedDate, mult * (i + 1)), pmtDueDays);
+					}
+					break;
+				default:
+					date = DateUtils.addDays(DateUtils.addMonths(startDate, mult * (i + 1)), pmtDueDays);
+					break;
+				}
+				break;
+			case Y:
+				date = DateUtils.addDays(DateUtils.addYears(startDate, mult * (i + 1)), pmtDueDays);
+				break;
+			}
+		return date;
+	}
+	
+	public PaymentPlanDetail setupPaymentNatureDate(Interval interval, Boolean intFirstPeriodAdj, PaymentMethod paymentMethod,
+			Date startDate, Integer mult, int pmtDueDays, int i, PaymentPlanDetail detail) {
+		return setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, startDate, 0, mult, pmtDueDays, i, detail);
+	}
+	
+	public PaymentPlanDetail setupPaymentNatureDate(Interval interval, Boolean intFirstPeriodAdj, PaymentMethod paymentMethod,
+			Date startDate, int fixedDay, Integer mult, int pmtDueDays, int i, PaymentPlanDetail detail) {
+		Date date = caculatePaymentDate(interval, intFirstPeriodAdj, paymentMethod, startDate, fixedDay, mult, pmtDueDays, i);
+		detail.setPaymentNatureDate(date);
+		return detail;
+	}
 	
 	/**
 	 * 计算并设置还款计划明细相应期数的到期还款日期
@@ -86,62 +209,9 @@ public class NewPaymentPlanCalcService {
 	 */
 	public PaymentPlanDetail setupPaymentDate(Interval interval, Boolean intFirstPeriodAdj, PaymentMethod paymentMethod,
 			Date postDate, int fixedDay, Integer mult, int pmtDueDays, int i, PaymentPlanDetail detail) {
-		switch (interval) {
-		case D:
-			if (intFirstPeriodAdj != null && intFirstPeriodAdj) {
-				detail.setPaymentDate(DateUtils.addDays(DateUtils.addDays(postDate, mult * (i + 1)), pmtDueDays));
-			} else {
-				detail.setPaymentDate(DateUtils
-						.addDays(DateUtils.addDays(DateUtils.addDays(postDate, 0), mult * (i + 1)), pmtDueDays));
-			}
-			break;
-		case W:
-			detail.setPaymentDate(DateUtils.addDays(DateUtils.addDays(postDate, mult * (i + 1) * 7), pmtDueDays));
-			break;
-		case M:
-			switch (paymentMethod) {
-			// TODO 待重构，增加固定日还款独立参数，不要通过还款方式区分，理论上，目前大部分支持分期的还款方式都可以支持固定日还款
-			case MRG:
-			case MSF:
-				if(fixedDay==0){
-					throw new IllegalArgumentException("固定还款日参数不可为0");
-				}
-				// 根据固定还款日计算方式，以28日作为分界，因为大小月的原因，业务上规定28日之后都以28日作为还款日
-				// 先计算固定还款日对应的日历
-				Calendar fixedCalendar = Calendar.getInstance();
-				fixedCalendar.setTime(postDate);
-				fixedDay = fixedDay >= 28 ? 28 : fixedDay;
-				fixedCalendar.set(fixedCalendar.get(Calendar.YEAR), fixedCalendar.get(Calendar.MONTH), fixedDay);
-				Date fixedDate = fixedCalendar.getTime();
-				//计算入账日对应的日历
-				Calendar postCalendar = Calendar.getInstance();
-				postCalendar.setTime(postDate);
-				
-				//假设每月固定5日还款;
-				//如果postDate=1月1日，那么第一次还款应该为1月5日；
-				//如果postDate=1月10日，那么第一次还款应该为2月5日；
-				if(i==0){
-					if( postCalendar.get(Calendar.DAY_OF_MONTH) <= fixedDay){
-						detail.setPaymentDate(DateUtils.addDays(DateUtils.addMonths(fixedDate, mult * (i + 1)), pmtDueDays));
-					}
-					else{
-						detail.setPaymentDate(DateUtils.addDays(DateUtils.addMonths(DateUtils.addMonths(fixedDate, 1), mult * (i + 1)), pmtDueDays));
-					}
-				}
-				else{
-					detail.setPaymentDate(DateUtils.addDays(DateUtils.addMonths(fixedDate, mult * (i + 1)), pmtDueDays));
-				}
-				break;
-			default:
-				detail.setPaymentDate(DateUtils.addDays(DateUtils.addMonths(postDate, mult * (i + 1)), pmtDueDays));
-				break;
-			}
-			break;
-		case Y:
-			detail.setPaymentDate(DateUtils.addDays(DateUtils.addYears(postDate, mult * (i + 1)), pmtDueDays));
-			break;
-		}
 		
+		Date date = caculatePaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedDay, mult, pmtDueDays, i);
+		detail.setPaymentDate(date);
 		return detail;
 	}
 

@@ -9,6 +9,7 @@ import javax.persistence.PersistenceContext;
 
 import org.joda.time.LocalDate;
 import org.joda.time.Period;
+import org.joda.time.PeriodType;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import net.engining.gm.facility.SystemStatusFacility;
@@ -97,15 +98,4 @@ public class OnlineProvider implements Provider7x24
 		return shouldDeferOffset();
 	}
 	
-	@Override
-	public int getOffset4BizDate2NatureDate(LocalDate bizDate) {
-		if(ValidateUtilExt.isNullOrEmpty(bizDate)){
-			bizDate = getCurrentDate();
-		}
-		LocalDate natureDate = new LocalDate(DateUtilsExt.truncate(new Date(), Calendar.DATE));
-		//bizDate大于natureDate为负数，反之正数
-		Period period = new Period(bizDate, natureDate);
-		int offset = period.getDays();
-		return offset;
-	}
 }
