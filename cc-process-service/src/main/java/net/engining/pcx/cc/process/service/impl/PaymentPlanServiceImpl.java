@@ -49,6 +49,7 @@ import net.engining.pcx.cc.process.service.account.NewPaymentPlanCalcService.Tem
 import net.engining.pcx.cc.process.service.common.InterestTableConvertService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.utils.DateUtilsExt;
 
 public class PaymentPlanServiceImpl implements PaymentPlanService {
 
@@ -169,6 +170,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			if (fixedPmtDay != 0 || fixedPmtDay > 31) {
 				// 确定fixedDate
 				detail = newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedPmtDay, mult, 0, i, detail);
+				
 			}
 			else {
 				detail = newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, mult, pmtDueDays, i, detail);
@@ -303,6 +305,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				paymentDetail.setInterestAmt(detail.getInterestAmt());
 				paymentDetail.setLoanPeriod(detail.getLoanPeriod());
 				paymentDetail.setPaymentDate(detail.getPaymentDate());
+				paymentDetail.setPaymentNatureDate(detail.getPaymentNatureDate());
 				paymentDetail.setPlanSeq(paymentPlan.getPlanSeq());
 				paymentDetail.setPrincipalBal(detail.getPrincipalBal());
 				paymentDetail.setBizDate(provider7x24.getCurrentDate().toDate());
@@ -341,6 +344,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 							// loanDetail.setFeeAmt(detail.getFeeAmt());
 							loanDetail.setInterestAmt(detail.getInterestAmt());
 							loanDetail.setPaymentDate(detail.getPaymentDate());
+							loanDetail.setPaymentNatureDate(detail.getPaymentNatureDate());
 							loanDetail.setPrincipalBal(detail.getPrincipalBal());
 							loanDetail.setBizDate(provider7x24.getCurrentDate().toDate());
 							loanDetail.setLastUpdateDate(new Date());
@@ -428,6 +432,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				detail.setInterestAmt(item.getInterestAmt());
 				detail.setLoanPeriod(item.getLoanPeriod());
 				detail.setPaymentDate(item.getPaymentDate());
+				detail.setPaymentNatureDate(item.getPaymentNatureDate());
 				detail.setPrincipalBal(item.getPrincipalBal());
 				details.add(detail);
 			}
@@ -575,6 +580,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				PaymentPlanDetail paymentPlanDetail = new PaymentPlanDetail();
 				paymentPlanDetail.setLoanPeriod(cactLoanPaymentDetail.getLoanPeriod());
 				paymentPlanDetail.setPaymentDate(cactLoanPaymentDetail.getPaymentDate());
+				paymentPlanDetail.setPaymentNatureDate(cactLoanPaymentDetail.getPaymentNatureDate());
 				paymentPlanDetail.setFeeAmt(cactLoanPaymentDetail.getFeeAmt());
 				paymentPlanDetail.setInterestAmt(cactLoanPaymentDetail.getInterestAmt());
 				paymentPlanDetail.setPrincipalBal(cactLoanPaymentDetail.getPrincipalBal());
@@ -681,6 +687,9 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 					|| account.paymentMethod.equals(PaymentMethod.MSB)) {
 				paymentPlanDetail.setPrincipalBal(BigDecimal.ZERO);
 			}
+			//根据偏移量修正还款计划的还款日然日
+			Date natureDate = DateUtilsExt.addDays(paymentPlanDetail.getPaymentDate(), -(provider7x24.getOffset4BizDate2NatureDate(new LocalDate(cactAccount.getSetupDate()))));
+			paymentPlanDetail.setPaymentNatureDate(natureDate);
 		}
 
 		// 每期的利息余额-按子账户为维度分别统计应计利息，四舍五入保留两位小数后，再相加汇总到当前一期的应还利息上，与结息步骤保持一致，否则会出现误差。
@@ -1007,10 +1016,16 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		judgePersistPaymentPlan(acctSeq, cactAccount.getCustId(), cactAccount.getAcctParamId(), paymentPlan, paymentPlan.getCreateDate());
 
 		for (PaymentPlanDetail paymentPlanDetail : paymentPlan.getDetailsMap().values()) {
-			logger.info("日期{},期数{},应还总金额{},应还本金{},应还利息{},应还罚息{}", paymentPlanDetail.getPaymentDate(), paymentPlanDetail.getLoanPeriod(),
-					paymentPlanDetail.getTotalRepayAmt(), paymentPlanDetail.getPrincipalBal(),
+			logger.info("还款日期{},还款业务日期{},期数{},应还总金额{},应还本金{},应还利息{},应还罚息{}", 
+					paymentPlanDetail.getPaymentNatureDate(), 
+					paymentPlanDetail.getPaymentDate(), 
+					paymentPlanDetail.getLoanPeriod(),
+					paymentPlanDetail.getTotalRepayAmt(), 
+					paymentPlanDetail.getPrincipalBal(),
 					// paymentPlanDetail.getFeeAmt(),
-					paymentPlanDetail.getInterestAmt(), paymentPlanDetail.getPenalizedAmt());
+					paymentPlanDetail.getInterestAmt(), 
+					paymentPlanDetail.getPenalizedAmt()
+					);
 		}
 
 		return paymentPlan;
@@ -1156,6 +1171,9 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				paymentDate = cactAccount.getSetupDate();
 			paymentDate = newComputeService.getNextInterstDate(cactAccount, paymentDate, acctParam, cactAccount.getBillingCycle());
 			detail.setPaymentDate(paymentDate);
+			//根据偏移量计算还款计划的还款日然日
+			Date natureDate = DateUtilsExt.addDays(detail.getPaymentDate(), -(provider7x24.getOffset4BizDate2NatureDate(new LocalDate(cactAccount.getSetupDate()))));
+			detail.setPaymentNatureDate(natureDate);
 			details.add(detail);
 			detailsMap.put(i, detail);
 		}

@@ -1,11 +1,14 @@
 package net.engining.pcx.cc.process.service.support;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import net.engining.gm.facility.SystemStatusFacility;
@@ -13,6 +16,8 @@ import net.engining.gm.infrastructure.enums.SystemStatusType;
 import net.engining.pcx.cc.infrastructure.shared.model.CactEndChangeAcct;
 import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
 import net.engining.pg.parameter.OrganizationContextHolder;
+import net.engining.pg.support.utils.DateUtilsExt;
+import net.engining.pg.support.utils.ValidateUtilExt;
 
 public class OnlineProvider implements Provider7x24
 {
@@ -90,5 +95,17 @@ public class OnlineProvider implements Provider7x24
 	public boolean shouldDeferPenaltySettle()
 	{
 		return shouldDeferOffset();
+	}
+	
+	@Override
+	public int getOffset4BizDate2NatureDate(LocalDate bizDate) {
+		if(ValidateUtilExt.isNullOrEmpty(bizDate)){
+			bizDate = getCurrentDate();
+		}
+		LocalDate natureDate = new LocalDate(DateUtilsExt.truncate(new Date(), Calendar.DATE));
+		//bizDate大于natureDate为负数，反之正数
+		Period period = new Period(bizDate, natureDate);
+		int offset = period.getDays();
+		return offset;
 	}
 }

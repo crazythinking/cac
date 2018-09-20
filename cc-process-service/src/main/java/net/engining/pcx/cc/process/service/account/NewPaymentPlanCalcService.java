@@ -17,6 +17,8 @@ import net.engining.pcx.cc.param.model.InterestTable;
 import net.engining.pcx.cc.param.model.RateCalcMethod;
 import net.engining.pcx.cc.param.model.enums.PaymentMethod;
 import net.engining.pcx.cc.process.model.PaymentPlanDetail;
+import net.engining.pcx.cc.process.service.support.Provider7x24;
+import net.engining.pg.support.utils.DateUtilsExt;
 
 /**
  * 还款计划相关计算辅助服务
@@ -29,6 +31,9 @@ public class NewPaymentPlanCalcService {
 
 	@Autowired
 	private NewComputeService newComputeService;
+	
+	@Autowired
+	Provider7x24 provider7x24;
 	
 	/**
 	 * 计算并设置还款计划明细相应期数的到期还款日期
@@ -136,7 +141,7 @@ public class NewPaymentPlanCalcService {
 			detail.setPaymentDate(DateUtils.addDays(DateUtils.addYears(postDate, mult * (i + 1)), pmtDueDays));
 			break;
 		}
-
+		
 		return detail;
 	}
 

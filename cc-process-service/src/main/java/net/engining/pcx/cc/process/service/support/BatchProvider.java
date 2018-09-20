@@ -1,13 +1,19 @@
 package net.engining.pcx.cc.process.service.support;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
+import org.joda.time.PeriodType;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import net.engining.gm.facility.SystemStatusFacility;
 import net.engining.gm.param.model.SystemStatus;
 import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
+import net.engining.pg.support.utils.DateUtilsExt;
+import net.engining.pg.support.utils.ValidateUtilExt;
 
 public class BatchProvider implements Provider7x24
 {
@@ -77,5 +83,23 @@ public class BatchProvider implements Provider7x24
 		return shouldDeferOffset();
 	}
 
-	
+	@Override
+	public int getOffset4BizDate2NatureDate(LocalDate bizDate) {
+		if(ValidateUtilExt.isNullOrEmpty(bizDate)){
+			bizDate = getCurrentDate();
+		}
+		LocalDate natureDate = new LocalDate(DateUtilsExt.truncate(new Date(), Calendar.DATE));
+		//bizDate大于natureDate为负数，反之正数
+		Period period = new Period(bizDate, natureDate);
+		int offset = period.getDays();
+		return offset;
+	}
+
+	public static void main(String[] args) {
+		LocalDate bizDate = new LocalDate(2018, 9, 22);
+		LocalDate natureDate = new LocalDate(2018, 9, 20);
+		Period period = new Period(bizDate, natureDate, PeriodType.days());
+		int offset = period.getDays();
+		System.out.println(offset);
+	}
 }

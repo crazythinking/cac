@@ -97,10 +97,11 @@ public class AccountManageServiceImpl implements AccountManageService{
 		acct.setAcctParamId(acctInfo.getParamId());
 		acct.setCustId(acctInfo.getCustId());
 		acct.setOrg(OrganizationContextHolder.getCurrentOrganizationId());
-		if(acctInfo.getBusinessDate() != null)
-			acct.setSetupDate(acctInfo.getBusinessDate());
-		else
-			acct.setSetupDate(system.processDate);
+//		if(acctInfo.getBusinessDate() != null)
+//			acct.setSetupDate(acctInfo.getBusinessDate());
+//		else
+		//fix bug: 建账日期用系统BizDate
+		acct.setSetupDate(provider7x24.getCurrentDate().toDate());
 		
 		//获取账户参数
 		Account acctParam = paramFacility.loadParameter(Account.class, acct.getAcctParamId(), provider7x24.getCurrentDate().toDate());

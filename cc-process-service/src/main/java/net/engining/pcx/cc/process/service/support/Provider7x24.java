@@ -15,6 +15,12 @@ public interface Provider7x24
 	LocalDate getCurrentDate();
 	
 	/**
+	 * 获取系统当前业务日期与系统自然日期的偏移量
+	 * @return
+	 */
+	int getOffset4BizDate2NatureDate(LocalDate date);
+	
+	/**
 	 * 用于7x24小时支持下取余额
 	 * @param cactSubAcct
 	 * @return

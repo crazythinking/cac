@@ -22,9 +22,14 @@ public class PaymentPlanDetail implements Serializable {
 	private Integer loanPeriod;
 
 	/**
-	 * 还款日
+	 * 还款业务日
 	 */
 	private Date paymentDate;
+	
+	/**
+	 * 还款自然日
+	 */
+	private Date paymentNatureDate;
 
 	/**
 	 * 原始应还本金
@@ -70,6 +75,20 @@ public class PaymentPlanDetail implements Serializable {
 	 * 首次生产还款计划时，将key = subacctType 和value = 余额成分存入，供还款冲销的时候使用
 	 */
 	private Map<String, BigDecimal> acctTypeAndAmtMap = new HashMap<String, BigDecimal>();
+
+	/**
+	 * @return the paymentNatureDate
+	 */
+	public Date getPaymentNatureDate() {
+		return paymentNatureDate;
+	}
+
+	/**
+	 * @param paymentNatureDate the paymentNatureDate to set
+	 */
+	public void setPaymentNatureDate(Date paymentNatureDate) {
+		this.paymentNatureDate = paymentNatureDate;
+	}
 
 	public BigDecimal getOrigPrincipalBal() {
 		return origPrincipalBal;

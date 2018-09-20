@@ -299,7 +299,10 @@ CREATE TABLE CACT_LOAN_PAYMENT_DETAIL
 	PLAN_SEQ int NOT NULL COMMENT '还款计划序号',
 	ACCT_SEQ int NOT NULL COMMENT '账户编号',
 	LOAN_PERIOD int COMMENT '还款期数',
-	PAYMENT_DATE date COMMENT '还款日',
+	-- 相对于系统BIZ_DATE产生的还款日，便于系统内按日期比较计算
+	PAYMENT_DATE date COMMENT '还款业务日 : 相对于系统BIZ_DATE产生的还款日，便于系统内按日期比较计算',
+	-- 对外显示的还款日期
+	PAYMENT_NATURE_DATE date COMMENT '还款自然日 : 对外显示的还款日期',
 	-- 当前本金余额
 	PRINCIPAL_BAL decimal(18,2) COMMENT '本金余额 : 当前本金余额',
 	INTEREST_AMT decimal(18,2) COMMENT '利息金额',
