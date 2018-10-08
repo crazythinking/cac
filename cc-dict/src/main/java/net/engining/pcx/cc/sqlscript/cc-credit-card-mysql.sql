@@ -143,7 +143,7 @@ CREATE TABLE AUTH_TRAN_ADJ_LOG
 	-- 操作序列号
 	OPER_SEQ int NOT NULL AUTO_INCREMENT COMMENT '操作序列号 : 操作序列号',
 	ORG varchar(12) NOT NULL COMMENT '机构号',
-	OPER_TIME timestamp NOT NULL COMMENT '操作时间',
+	OPER_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '操作时间',
 	OPERA_ID varchar(40) NOT NULL COMMENT '操作员ID',
 	ACCT_NO int NOT NULL COMMENT '账号',
 	CARD_NO varchar(19) NOT NULL COMMENT '卡号',
@@ -170,7 +170,7 @@ CREATE TABLE AUTH_TRAN_ADJ_LOG
 	MTI char(4) NOT NULL COMMENT '交易类型标识',
 	-- !!!java.lang.Boolean!!!
 	VOID_IND bit(1) NOT NULL COMMENT '是否已撤销 : !!!java.lang.Boolean!!!',
-	VOID_TIME timestamp NOT NULL COMMENT '撤销日期时间',
+	VOID_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '撤销日期时间',
 	VOID_REASON varchar(40) NOT NULL COMMENT '撤销原因',
 	VOID_OPERATOR varchar(8) NOT NULL COMMENT '撤销操作员',
 	MERCHANT_CD varchar(15) NOT NULL COMMENT '受卡方(商户)标识码-B042',
@@ -264,7 +264,7 @@ V|被撤销
 A|已确认完成
 D|拒绝',
 	TXN_CODE varchar(20) NOT NULL COMMENT '交易代码',
-	LOG_OL_TIME timestamp NOT NULL COMMENT 'LOG联机时间',
+	LOG_OL_TIME timestamp DEFAULT NOW() NOT NULL COMMENT 'LOG联机时间',
 	LOG_BIZ_DATE date NOT NULL COMMENT '联机业务日期',
 	OLD_TXN_CODE varchar(20) COMMENT '原交易代码',
 	OLD_FWD_INST_ID varchar(11) COMMENT '原始转发机构号',
@@ -364,7 +364,7 @@ V|被撤销
 A|已确认完成
 D|拒绝',
 	TXN_CODE varchar(20) NOT NULL COMMENT '交易代码',
-	LOG_OL_TIME timestamp NOT NULL COMMENT 'LOG联机时间',
+	LOG_OL_TIME timestamp DEFAULT NOW() NOT NULL COMMENT 'LOG联机时间',
 	LOG_BIZ_DATE date NOT NULL COMMENT '联机业务日期',
 	-- ///
 	-- A|普通
@@ -466,7 +466,7 @@ CREATE TABLE CACT_CSSFEE_REG
 	CARD_NO varchar(19) NOT NULL COMMENT '卡号',
 	TXN_DATE date NOT NULL COMMENT '交易日期',
 	-- 请求日期时间
-	REQUEST_TIME timestamp NOT NULL COMMENT '请求日期时间 : 请求日期时间',
+	REQUEST_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '请求日期时间 : 请求日期时间',
 	JPA_VERSION int NOT NULL COMMENT '乐观锁版本号',
 	PRIMARY KEY (CSSFEE_TXN_SEQ)
 ) COMMENT = '客服费通知表 : 拒绝重入账交易临时表';
@@ -489,7 +489,7 @@ CREATE TABLE CACT_LOAN
 	CURR_CD char(3) NOT NULL COMMENT '币种',
 	REGISTER_DATE date NOT NULL COMMENT '分期注册日期',
 	-- 请求日期时间
-	REQUEST_TIME timestamp NOT NULL COMMENT '请求日期时间 : 请求日期时间',
+	REQUEST_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '请求日期时间 : 请求日期时间',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.LoanType
 	LOAN_TYPE char(1) NOT NULL COMMENT '分期类型 : ///
@@ -567,7 +567,7 @@ CREATE TABLE CACT_LOAN_REG
 	CURR_CD char(3) NOT NULL COMMENT '币种',
 	REGISTER_DATE date NOT NULL COMMENT '分期注册日期',
 	-- 请求日期时间
-	REQUEST_TIME timestamp NOT NULL COMMENT '请求日期时间 : 请求日期时间',
+	REQUEST_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '请求日期时间 : 请求日期时间',
 	REF_NBR varchar(23) NOT NULL COMMENT '交易参考号',
 	-- ///
 	-- @net.engining.pcx.cc.infrastructure.shared.enums.LoanType
@@ -609,7 +609,7 @@ CREATE TABLE CACT_OPER_LOG
 	-- 操作序列号
 	OPER_SEQ int NOT NULL AUTO_INCREMENT COMMENT '操作序列号 : 操作序列号',
 	OPERA_ID varchar(40) NOT NULL COMMENT '操作员ID',
-	OPER_TIME timestamp NOT NULL COMMENT '操作时间',
+	OPER_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '操作时间',
 	BRANCH_ID varchar(9) NOT NULL COMMENT '分支行号',
 	SERVICE_CODE char(4) NOT NULL COMMENT '服务代码',
 	CARD_NO varchar(19) NOT NULL COMMENT '卡号',
@@ -627,13 +627,13 @@ CREATE TABLE CACT_ORG_STST
 	ORG_SEQ_ID int NOT NULL COMMENT '机构编号',
 	ORG varchar(12) NOT NULL COMMENT '机构号',
 	LOG_BIZ_DATE date NOT NULL COMMENT '联机业务日期',
-	LAST_TXN_TIMESTAMP timestamp NOT NULL COMMENT '最后一笔交易时间',
-	LAST_SUCC_TXN_TIMESTAMP timestamp NOT NULL COMMENT '最后一笔成功交易时间',
-	LAST_CUP_TXN_TIMESTAMP timestamp NOT NULL COMMENT '最后一笔CUP渠道交易时间',
-	LAST_BANK_TXN_TIMESTAMP timestamp NOT NULL COMMENT '最后一笔行内交易时间',
-	LAST_VISA_TXN_TIMESTAMP timestamp NOT NULL COMMENT '最后一笔VISA交易时间',
-	LAST_MC_TXN_TIMESTAMP timestamp NOT NULL COMMENT '最后一笔MC交易时间',
-	LAST_JCB_TXN_TIMESTAMP timestamp NOT NULL COMMENT '最后一笔JCB交易时间',
+	LAST_TXN_TIMESTAMP timestamp DEFAULT NOW() NOT NULL COMMENT '最后一笔交易时间',
+	LAST_SUCC_TXN_TIMESTAMP timestamp DEFAULT NOW() NOT NULL COMMENT '最后一笔成功交易时间',
+	LAST_CUP_TXN_TIMESTAMP timestamp DEFAULT NOW() NOT NULL COMMENT '最后一笔CUP渠道交易时间',
+	LAST_BANK_TXN_TIMESTAMP timestamp DEFAULT NOW() NOT NULL COMMENT '最后一笔行内交易时间',
+	LAST_VISA_TXN_TIMESTAMP timestamp DEFAULT NOW() NOT NULL COMMENT '最后一笔VISA交易时间',
+	LAST_MC_TXN_TIMESTAMP timestamp DEFAULT NOW() NOT NULL COMMENT '最后一笔MC交易时间',
+	LAST_JCB_TXN_TIMESTAMP timestamp DEFAULT NOW() NOT NULL COMMENT '最后一笔JCB交易时间',
 	TODAY_TXN_CNT int NOT NULL COMMENT '今日交易笔数',
 	TODAY_SUCC_TXN_CNT int NOT NULL COMMENT '今日成功交易笔数',
 	TODAY_REVERSAL_CNT int NOT NULL COMMENT '今日冲正交易笔数',
@@ -657,7 +657,7 @@ CREATE TABLE CACT_POINT_ADJ_LOG
 	-- 操作序列号
 	OPER_SEQ int NOT NULL AUTO_INCREMENT COMMENT '操作序列号 : 操作序列号',
 	ORG varchar(12) NOT NULL COMMENT '机构号',
-	OPER_TIME timestamp NOT NULL COMMENT '操作时间',
+	OPER_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '操作时间',
 	OPERA_ID varchar(40) NOT NULL COMMENT '操作员ID',
 	ACCT_NO int NOT NULL COMMENT '账号',
 	CARD_NO varchar(19) NOT NULL COMMENT '卡号',
@@ -697,7 +697,7 @@ CREATE TABLE CACT_POINT_REG
 	CARD_NO varchar(19) NOT NULL COMMENT '卡号',
 	TXN_DATE date NOT NULL COMMENT '交易日期',
 	-- 请求日期时间
-	REQUEST_TIME timestamp NOT NULL COMMENT '请求日期时间 : 请求日期时间',
+	REQUEST_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '请求日期时间 : 请求日期时间',
 	-- ///
 	-- M|金融交易
 	-- P|积分交易
@@ -767,7 +767,7 @@ CREATE TABLE CACT_REPRINT_REG
 	STMT_DATE date NOT NULL COMMENT '账单日期',
 	TXN_DATE date NOT NULL COMMENT '交易日期',
 	-- 请求日期时间
-	REQUEST_TIME timestamp NOT NULL COMMENT '请求日期时间 : 请求日期时间',
+	REQUEST_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '请求日期时间 : 请求日期时间',
 	CARD_NO varchar(19) NOT NULL COMMENT '卡号',
 	JPA_VERSION int NOT NULL COMMENT '乐观锁版本号',
 	PRIMARY KEY (REPRINT_SEQ)
@@ -907,7 +907,7 @@ CREATE TABLE CACT_TXN_UNSTMT
 	CARD_NO varchar(19) COMMENT '卡号',
 	CARD_GROUP_ID varchar(19) COMMENT '卡群组号',
 	TXN_DATE date NOT NULL COMMENT '交易日期',
-	TXN_TIME timestamp NOT NULL COMMENT '交易时间',
+	TXN_TIME timestamp DEFAULT NOW() NOT NULL COMMENT '交易时间',
 	POST_CODE char(8) NOT NULL COMMENT '入账交易码',
 	-- ///
 	-- @net.engining.gm.infrastructure.enums.TxnDirection
