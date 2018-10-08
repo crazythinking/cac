@@ -889,8 +889,7 @@ F|女',
 	STMT_MEDIA_TYPE char(1) COMMENT '账单介质类型 : ///
 @net.engining.gm.infrastructure.enums.StmtMediaType',
 	JPA_VERSION int NOT NULL COMMENT '乐观锁版本号',
-	PRIMARY KEY (STMT_SEQ),
-	UNIQUE (STMT_DATE)
+	PRIMARY KEY (STMT_SEQ)
 ) COMMENT = '账户账单历史表';
 
 
