@@ -108,7 +108,8 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 						{
 							updateReceivable(cactSubAcct, cactAccount, subAcct,account, receivableTable, startDate);
 						}
-					}else{
+					}
+					else{
 						// 计息使用的利率表
 						receivableTable = newInterestService.fitInterestTable(startDate, endDate, tables);
 						
@@ -168,12 +169,12 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 				}
 				break;
 			}
-			case Iterative:
+			case Iterative: //逐笔法
 			{
 				BigDecimal interest = null;
 				BigDecimal interestAmount= BigDecimal.ZERO;
 				
-				if( (PaymentMethod.MRG).equals(account.paymentMethod) ){  //特殊固定日等额本金
+				if( (PaymentMethod.MRG).equals(account.paymentMethod) ){  //等额本金-剩余靠前特殊固定日还款
 					
 					if(new LocalDate(batchDate.plusDays(1)).equals(new LocalDate(cactAccount.getInterestDate())) ){ //根据下次结息日来控制应收利息
 						// 最后剩余的天数按日息来处理
@@ -186,8 +187,7 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 									.setScale(newComputeService.getReceivableScale(), RoundingMode.HALF_UP)
 								);	// endDate表示闭区间，所以直接是这个days的值
 					}
-				}else if((PaymentMethod.MSF ).equals(account.paymentMethod) ){  //特殊固定日等额本息
-					
+				}else if((PaymentMethod.MSF ).equals(account.paymentMethod) ){  //等额本息-剩余靠前特殊固定日还款
 					if(new LocalDate(batchDate.plusDays(1)).equals( new LocalDate(cactAccount.getInterestDate())) ){ //根据下次结息日来控制应收利息
 						if( cactAccount.getCurrentLoanPeriod()==0 ){//首期放款特殊处理
 							List<RateCalcMethod> cycleRates = newInterestService.convertRates(interestTable.cycleBase, interestTable); //转换成月利率
@@ -220,23 +220,33 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 						}
 					}
 					
-				}else{
+				}
+				else{
+					//计算利息的金额基数
+					BigDecimal inteBaseAmount = cactSubAcct.getEndDayBal();
+					//等本等息还款方式任何时候都使用贷款的全额本金计算利息
+					if((account.paymentMethod == PaymentMethod.PSV || account.paymentMethod == PaymentMethod.PSZ) && inteBaseAmount.compareTo(BigDecimal.ZERO) != 0) {
+						inteBaseAmount = cactAccount.getTotalLoanPrincipalAmt();
+					}
+					//等本等息还款日当天生成的LBAL子账户，不计息，因为已在LOAN里计息
+					if (cactSubAcct.getStmtHist() == 0 &&
+							"LBAL".equals(cactSubAcct.getSubAcctType()) &&
+							(account.paymentMethod == PaymentMethod.PSV || account.paymentMethod == PaymentMethod.PSZ)) {
+						break;
+					}
 					
-					//逐笔法
 					interest = newInterestService.calcInterest(
 							startDate,
 							batchDate.plusDays(1),
-							cactSubAcct.getEndDayBal(),
+							inteBaseAmount,
 							ImmutableList.of(interestTable),
 							newComputeService.getReceivableScale(),
 							InterestCycleRestMethod.NA);
 				}
-					
+				
+				// 确实进行了计息操作
 				if (interest != null)
 				{
-					// 确实进行了计息操作
-					
-					
 					// 判断该余额成份是否享受免息期
 					if (subAcct.intWaive && Boolean.TRUE.equals(cactAccount.getGraceDaysFullInd()))
 					{
