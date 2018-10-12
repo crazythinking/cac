@@ -50,6 +50,7 @@ import net.engining.pcx.cc.process.service.common.InterestTableConvertService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
 import net.engining.pg.support.utils.DateUtilsExt;
+import net.engining.pg.support.utils.ValidateUtilExt;
 
 public class PaymentPlanServiceImpl implements PaymentPlanService {
 
@@ -713,6 +714,19 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		// 每期的未入账罚息金额
 		Map<Integer, BigDecimal> penalizedAmtMap = new HashMap<Integer, BigDecimal>();
 		
+		// ################## Begin 这种情况是在提前还款时，PAYM入账已经冲消掉相应的子账户时，以下逻辑才有效；
+		// 确定是否存在提前还款；当前业务日期是否早于当期结息日且存在STMT_HIST=0（表示当期）的LBAL或INTE，说明由提前还款触发了提前结转，即存在提前还款；
+		boolean isPrePay = false;
+		for (CactSubAcct cactSubAcct : subAccts) {
+			if(provider7x24.getCurrentDate().isBefore(new LocalDate(cactAccount.getInterestDate())) && 
+					cactSubAcct.getStmtHist() == 0 && 
+					("LBAL".equals(cactSubAcct.getSubAcctType()) || "INTE".equals(cactSubAcct.getSubAcctType()))
+					){
+				isPrePay = true;
+			}
+		}
+		// ################## End 
+		
 		// ======================以下逻辑修还款计划中的每期的贷款利息、本金和罚息；根据当前子账户信息填充应还明细
 		for (CactSubAcct cactSubAcct : subAccts) {
 			BigDecimal intAmt = BigDecimal.ZERO;
@@ -773,15 +787,23 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				}
 				// 提前还款当期计息标准为按结息周期靠前，取原还款计划该期的利息作为应还利息
 				else if(PrePaySettlementType.M.equals(account.advanceType)){
-					// 获取该期的原始还款计划明细的该期原始利息；period从1开始，所以-1
-					// 直接从原始计划里取只针对LOAN是正确的，因为原始还款计划计算的利息，只是按LOAN计算的；
-					if("LOAN".equals(cactSubAcct.getSubAcctType())){
-						BigDecimal tmpInt = paymentPlan.getDetails().get(period-1).getOrigInterestAmt();
-						intAmt = intAmt.add(tmpInt);
+					//未发生提前还款
+					if(!isPrePay){
+						// 获取该期的原始还款计划明细的该期原始利息；period从1开始，所以-1
+						// 直接从原始计划里取只针对LOAN是正确的，因为原始还款计划计算的利息，只是按LOAN计算的；
+						if("LOAN".equals(cactSubAcct.getSubAcctType())){
+							BigDecimal tmpInt = paymentPlan.getDetails().get(period-1).getOrigInterestAmt();
+							intAmt = intAmt.add(tmpInt);
+						}
+						//FIXME 然而对于其他类型的SubAcct，是结转后产生的，原始计划不可能针对这些SubAcct产生利息，因此需要按周期进行计算；暂时对于这类SubAcct没有设置利率参数，无需计息
+						else {
+							if(ValidateUtilExt.isNotNullOrEmpty(intAmts.get(period))){
+								intAmt = intAmts.get(period).add(BigDecimal.ZERO);
+							}
+						}
 					}
-					//FIXME 然而对于其他类型的SubAcct，是结转后产生的，原始计划不可能针对这些SubAcct产生利息，因此需要按周期进行计算；暂时对于这类SubAcct没有设置利率参数，无需计息
 					else {
-						intAmt = intAmts.get(period).add(BigDecimal.ZERO);
+						//TODO 针对部分提前还款时，需要根据LBAL的CURR_BAL按周期重新计算利息
 					}
 					
 				}
