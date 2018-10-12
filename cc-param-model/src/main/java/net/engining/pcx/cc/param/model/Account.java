@@ -22,6 +22,7 @@ import net.engining.pcx.cc.param.model.enums.ComputInteHT;
 import net.engining.pcx.cc.param.model.enums.CycleStartDay;
 import net.engining.pcx.cc.param.model.enums.DelqDayInd;
 import net.engining.pcx.cc.param.model.enums.DelqTolInd;
+import net.engining.pcx.cc.param.model.enums.DepositSortType;
 import net.engining.pcx.cc.param.model.enums.DownpmtTolInd;
 import net.engining.pcx.cc.param.model.enums.GenAcctMethod;
 import net.engining.pcx.cc.param.model.enums.LoanFeeMethod;
@@ -231,6 +232,11 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
      * 计息头尾规则
      */
     public ComputInteHT computInteHT;
+    
+    /**
+     * 按账期冲销顺序类型
+     */
+    public DepositSortType depositSortType;
     
     //分期本金除不尽的部分放在首期收取还是末期收取
     //@PropertyInfo(name="分期本金余数收取方式", length=2)

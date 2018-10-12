@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Lists;
+
 import net.engining.pcx.cc.infrastructure.shared.enums.PostTxnTypeDef;
 import net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag;
 import net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType;
@@ -32,6 +34,7 @@ import net.engining.pcx.cc.param.model.PostCode;
 import net.engining.pcx.cc.param.model.SubAcct;
 import net.engining.pcx.cc.param.model.SubAcctType;
 import net.engining.pcx.cc.param.model.enums.BalanceType;
+import net.engining.pcx.cc.param.model.enums.DepositSortType;
 import net.engining.pcx.cc.param.model.enums.SysTxnCd;
 import net.engining.pcx.cc.process.model.AcctModel;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
@@ -104,11 +107,17 @@ public class OffsetService
 		BigDecimal assignBal = BigDecimal.ZERO;
 		
 		//冲销子账户数据模型:
-		 // 子账户账期(Integer)组合，账期相同的根据子账户类型(String)组合子账户(List<CactSubAcct>)
+		//子账户账期(Integer)组合，账期相同的根据子账户类型(String)组合子账户(List<CactSubAcct>)
 		Map<Integer, Map<String, List<CactSubAcct>>> depositCactSubAcctMap = genDepositSubAcct(subAccts);
 		
-		// 取子账户的账期排序
-		List<Integer> stmtList = sortDepositSubAcct(depositCactSubAcctMap);
+		// 取子账户的账期排序, 根据排序冲销；没有配置该参数的情况，按正序冲销
+		List<Integer> stmtList = Lists.newArrayList();
+		if(account.depositSortType == null){
+			stmtList = sortDepositSubAcct(depositCactSubAcctMap, DepositSortType.A);
+		}
+		else {
+			stmtList = sortDepositSubAcct(depositCactSubAcctMap, account.depositSortType);
+		}
 		
 		// 执行还款分配处理，需要还款的金额为当前存款余额、日终存款余额和交易入账金额中较小者
 		BigDecimal offsetAmount = depositCactSubAcct.getCurrBal().negate();
@@ -165,24 +174,28 @@ public class OffsetService
 	}
 	
 	/**
-	 * 按账期排序
+	 * 按账期排序; 决定了子账户的冲销顺序
 	 * @param depositCactSubAcctMap
 	 * @return
 	 */
-	private List<Integer> sortDepositSubAcct(Map<Integer, Map<String, List<CactSubAcct>>> depositCactSubAcctMap){
-		
+	private List<Integer> sortDepositSubAcct(Map<Integer, Map<String, List<CactSubAcct>>> depositCactSubAcctMap, DepositSortType depositSortType){
 		List<Integer> subAcctPayments = new ArrayList<Integer>();
 		Iterator<Integer> it = depositCactSubAcctMap.keySet().iterator();
+		
 		while( it.hasNext() ) {
-			subAcctPayments.add( it.next() );
+			subAcctPayments.add(it.next());
 		}
 	
 		if( !subAcctPayments.isEmpty() ) {
 			// 根据账期，逆序或者顺序排序
 			Collections.sort( subAcctPayments, new Comparator<Integer>() { 
 				public int compare(Integer n1, Integer n2) { 
-//					return (n2.compareTo(n1)); 
-					return (n1.compareTo(n2)); 
+					if(DepositSortType.A.equals(depositSortType)){
+						return (n2.compareTo(n1)); //正序
+					}
+					else {
+						return (n1.compareTo(n2)); //反序
+					}
 				} 
 			}); 
 			

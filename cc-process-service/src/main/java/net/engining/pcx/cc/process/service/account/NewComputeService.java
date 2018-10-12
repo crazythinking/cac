@@ -185,6 +185,19 @@ public class NewComputeService {
 		}
 		return setupDate;
 	}
+	
+	/**
+	 * 获取账户类型参数对象
+	 * 
+	 * @param paramId
+	 *            账户参数代码
+	 * @return 账户类型参数对象
+	 */
+	public Account retrieveAccount(CactSubAcct cactSubAcct) {
+		CactAccount cactAccount = em.find(CactAccount.class, cactSubAcct.getAcctSeq());
+		
+		return retrieveAccount(cactAccount);
+	}
 
 	/**
 	 * 获取账户类型参数对象
