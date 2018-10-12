@@ -774,12 +774,15 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				// 提前还款当期计息标准为按结息周期靠前，取原还款计划该期的利息作为应还利息
 				else if(PrePaySettlementType.M.equals(account.advanceType)){
 					// 获取该期的原始还款计划明细的该期原始利息；period从1开始，所以-1
+					// 直接从原始计划里取只针对LOAN是正确的，因为原始还款计划计算的利息，只是按LOAN计算的；
 					if("LOAN".equals(cactSubAcct.getSubAcctType())){
 						BigDecimal tmpInt = paymentPlan.getDetails().get(period-1).getOrigInterestAmt();
 						intAmt = intAmt.add(tmpInt);
 					}
-					//FIXME 2018-9-18: 直接从原始计划里取只针对LOAN是正确的，因为原始还款计划计算的利息，只是按LOAN计算的；
-					//然而对于其他类型的SubAcct，是结转后产生的，原始计划不可能针对这些SubAcct产生利息，因此需要按周期进行计算；
+					//FIXME 然而对于其他类型的SubAcct，是结转后产生的，原始计划不可能针对这些SubAcct产生利息，因此需要按周期进行计算；暂时对于这类SubAcct没有设置利率参数，无需计息
+					else {
+						intAmt = intAmts.get(period).add(BigDecimal.ZERO);
+					}
 					
 				}
 				else{
