@@ -5,6 +5,7 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd">
 
+	<!-- 同步批量过程中发生的联机交易的账户余额for7x24 -->
 	<batch:step id="cc-5000-sync-endbal">
 		<batch:tasklet>
 			<batch:chunk reader="cc5000R" processor="cc5000P00"  commit-interval="#{env['batchCc5000Interval']?:100}" >
