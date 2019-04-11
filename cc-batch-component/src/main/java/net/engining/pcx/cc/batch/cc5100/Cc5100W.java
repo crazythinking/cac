@@ -1,20 +1,5 @@
 package net.engining.pcx.cc.batch.cc5100;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag4InternalAcct;
 import net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType;
 import net.engining.pcx.cc.infrastructure.shared.model.CactInternalTxnPostHst;
@@ -23,8 +8,17 @@ import net.engining.pcx.cc.infrastructure.shared.model.CactIntrnlTxnPostSum;
 import net.engining.pcx.cc.param.model.InternalAccount;
 import net.engining.pcx.cc.param.model.Subject;
 import net.engining.pcx.cc.param.model.enums.InternalAccountStatus;
-import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.util.*;
 
 /**
  * 将批量时的内部入账流水表的记录，分片分组插入内部账户汇总表

@@ -1,25 +1,10 @@
 package net.engining.pcx.cc.batch.cc5400;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-
 import net.engining.gm.infrastructure.enums.BusinessType;
 import net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType;
-import net.engining.pcx.cc.infrastructure.shared.model.ApGlBal;
-import net.engining.pcx.cc.infrastructure.shared.model.ApGlTxn;
-import net.engining.pcx.cc.infrastructure.shared.model.ApGlVolDtl;
-import net.engining.pcx.cc.infrastructure.shared.model.ApSubjectSummary;
-import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
+import net.engining.pcx.cc.infrastructure.shared.model.*;
 import net.engining.pcx.cc.param.model.Subject;
 import net.engining.pcx.cc.param.model.TxnSubjectMapping;
 import net.engining.pcx.cc.param.model.TxnSubjectParam;
@@ -27,8 +12,16 @@ import net.engining.pcx.cc.param.model.enums.DbCrInd;
 import net.engining.pcx.cc.param.model.enums.RedBlueInd;
 import net.engining.pcx.cc.process.service.common.AcctingRecord;
 import net.engining.pcx.cc.process.service.common.GlCalculator;
-import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
+import org.springframework.batch.item.ItemWriter;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Cc5400W implements ItemWriter<ApGlTxn> {
 

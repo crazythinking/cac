@@ -1,21 +1,9 @@
 package net.engining.pcx.cc.process.service.impl;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.commons.lang3.time.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.google.common.base.Optional;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-
 import net.engining.gm.facility.SystemStatusFacility;
 import net.engining.gm.infrastructure.enums.Interval;
-import net.engining.gm.param.model.SystemStatus;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccountNo;
 import net.engining.pcx.cc.infrastructure.shared.model.QCactAccountNo;
@@ -24,10 +12,18 @@ import net.engining.pcx.cc.process.model.AccountInfo;
 import net.engining.pcx.cc.process.service.AccountManageService;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
-import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
 import net.engining.pg.support.core.exception.ErrorCode;
 import net.engining.pg.support.core.exception.ErrorMessageException;
+import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.util.Date;
 
 @Service
 public class AccountManageServiceImpl implements AccountManageService{

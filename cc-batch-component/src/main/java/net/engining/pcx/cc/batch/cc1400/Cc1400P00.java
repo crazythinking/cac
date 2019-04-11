@@ -1,25 +1,6 @@
 package net.engining.pcx.cc.batch.cc1400;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.commons.lang3.time.DateUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-
 import com.querydsl.jpa.impl.JPAQueryFactory;
-
 import net.engining.gm.infrastructure.enums.AcctCloseReason;
 import net.engining.gm.param.model.CreditParameter;
 import net.engining.pcx.cc.file.model.AcctCloseRptItem;
@@ -32,8 +13,24 @@ import net.engining.pcx.cc.infrastructure.shared.model.QCactCard;
 import net.engining.pcx.cc.param.model.Account;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.common.BlockCodeUtils;
-import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
+import org.apache.commons.lang3.time.DateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 /**
  * 销卡销户及关闭账户批处理
@@ -203,9 +200,8 @@ public class Cc1400P00 implements ItemProcessor<CactCancelReg, I4001OutputItem> 
 
 	/**
 	 * 生成销卡销户报表
-	 * 
 	 * @param cancel
-	 * @param cust
+	 * @param cactAccount
 	 * @return
 	 */
 	private CancelRptItem createCancelResponseItem(CactCancelReg cancel, CactAccount cactAccount) {
@@ -229,9 +225,7 @@ public class Cc1400P00 implements ItemProcessor<CactCancelReg, I4001OutputItem> 
 
 	/**
 	 * 关闭账户条件校验
-	 * 
-	 * @param acct
-	 * @param acctO
+	 * @param cactAccount
 	 * @return
 	 */
 	private AcctCloseReason getAcctCloseReason(CactAccount cactAccount) {
@@ -248,11 +242,9 @@ public class Cc1400P00 implements ItemProcessor<CactCancelReg, I4001OutputItem> 
 
 	/**
 	 * 生成关闭账户报表
-	 * 
 	 * @param acct
-	 * @param acctO
-	 * @param car
 	 * @param reason
+	 * @return
 	 */
 	private AcctCloseRptItem createAcctCloseRptItem(CactAccount acct, AcctCloseReason reason) 
 	{

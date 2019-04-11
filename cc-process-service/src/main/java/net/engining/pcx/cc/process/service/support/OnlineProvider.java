@@ -1,24 +1,16 @@
 package net.engining.pcx.cc.process.service.support;
 
-import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.Date;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.joda.time.LocalDate;
-import org.joda.time.Period;
-import org.joda.time.PeriodType;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import net.engining.gm.facility.SystemStatusFacility;
 import net.engining.gm.infrastructure.enums.SystemStatusType;
 import net.engining.pcx.cc.infrastructure.shared.model.CactEndChangeAcct;
 import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
-import net.engining.pg.parameter.OrganizationContextHolder;
-import net.engining.pg.support.utils.DateUtilsExt;
-import net.engining.pg.support.utils.ValidateUtilExt;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
+import org.joda.time.LocalDate;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
 
 public class OnlineProvider implements Provider7x24
 {

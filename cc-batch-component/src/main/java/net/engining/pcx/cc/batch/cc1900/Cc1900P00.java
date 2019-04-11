@@ -1,21 +1,20 @@
 package net.engining.pcx.cc.batch.cc1900;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-
 import net.engining.pcx.cc.batch.common.PrintStmtUtils;
 import net.engining.pcx.cc.file.model.StmtMsgInterfaceItem;
 import net.engining.pcx.cc.infrastructure.shared.enums.MessageCategory;
 import net.engining.pcx.cc.infrastructure.shared.model.CactStmtHst;
 import net.engining.pcx.cc.infrastructure.shared.model.CactTxnUnstmt;
 import net.engining.pcx.cc.param.model.PostCode;
-import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 /**
  * CMD300-账单交易生成

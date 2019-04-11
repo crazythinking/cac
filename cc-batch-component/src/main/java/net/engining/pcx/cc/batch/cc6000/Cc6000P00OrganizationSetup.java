@@ -1,10 +1,10 @@
 package net.engining.pcx.cc.batch.cc6000;
 
+import net.engining.pg.support.core.context.OrganizationContextHolder;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Service;
 
-import net.engining.pg.parameter.OrganizationContextHolder;
 
 
 /**

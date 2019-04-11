@@ -1,22 +1,19 @@
 package net.engining.pcx.cc.process.service.ledger;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import net.engining.pcx.cc.infrastructure.shared.enums.PostTypeDef;
 import net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType;
 import net.engining.pcx.cc.infrastructure.shared.model.ApGlTxn;
 import net.engining.pcx.cc.param.model.enums.PostGlInd;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
-import net.engining.pg.parameter.Provider4Organization;
+import net.engining.pg.support.core.context.Provider4Organization;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.util.Date;
 
 @Service
 public class FlowIntoApGlTxnService {

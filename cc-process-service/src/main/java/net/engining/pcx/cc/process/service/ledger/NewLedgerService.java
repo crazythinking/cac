@@ -1,20 +1,5 @@
 package net.engining.pcx.cc.process.service.ledger;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Date;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.commons.lang3.StringUtils;
-import org.joda.time.LocalDate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import net.engining.gm.infrastructure.enums.AgeGroupCd;
 import net.engining.pcx.cc.infrastructure.shared.enums.PostTypeDef;
 import net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType;
@@ -25,7 +10,19 @@ import net.engining.pcx.cc.param.model.enums.PostGlInd;
 import net.engining.pcx.cc.process.service.account.NewAgeService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
-import net.engining.pg.parameter.Provider4Organization;
+import net.engining.pg.support.core.context.Provider4Organization;
+import org.joda.time.LocalDate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Date;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * 总账处理服务
@@ -121,9 +118,8 @@ public class NewLedgerService {
 
 	/**
 	 * 入总账交易流水
-	 * 
 	 * @param acctSeq
-	 * @param postCodeParam
+	 * @param postCode
 	 * @param postAmount
 	 * @param postDate
 	 * @param txnDetailSeq

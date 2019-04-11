@@ -1,18 +1,5 @@
 package net.engining.pcx.cc.process.service.impl;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import net.engining.gm.facility.SystemStatusFacility;
 import net.engining.gm.infrastructure.enums.TxnDirection;
 import net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag4InternalAcct;
@@ -22,8 +9,19 @@ import net.engining.pcx.cc.infrastructure.shared.model.CactIntrnlTxnPostOl;
 import net.engining.pcx.cc.param.model.InternalAcctPostCode;
 import net.engining.pcx.cc.param.model.enums.RedBlueInd;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
-import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
 
 /**
  * 内部账户记账处理服务；<br>
@@ -145,7 +143,7 @@ public class InternalAccountService{
 	{
 		postByCode(internalAccountPostCode, amount, currencyCode, txnDetailSeq, txnDetailType, systemStatusFacility.getSystemStatus().businessDate);
 	}
-	
+
 	/**
 	 * 按照指定方式入内部账户入账流水（页面调账）
 	 * @param internalAccountId
@@ -154,7 +152,8 @@ public class InternalAccountService{
 	 * @param amount
 	 * @param currencyCode
 	 * @param processDate
-	 * @param onlineTxnSeq
+	 * @param txnDetailSeq
+	 * @param txnDetailType
 	 */
 	public void postByData(String internalAccountId, TxnDirection dbCrInd, RedBlueInd redBlueInd, BigDecimal amount, String currencyCode,Date processDate, String txnDetailSeq, TxnDetailType txnDetailType)
 	{

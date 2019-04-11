@@ -1,35 +1,9 @@
 package net.engining.pcx.cc.process.service.account;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.querydsl.jpa.impl.JPAQueryFactory;
-
 import net.engining.gm.infrastructure.enums.TxnDirection;
 import net.engining.pcx.cc.infrastructure.shared.enums.PostingFlag;
-import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
-import net.engining.pcx.cc.infrastructure.shared.model.CactAgeDue;
-import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
-import net.engining.pcx.cc.infrastructure.shared.model.CactTxnPost;
-import net.engining.pcx.cc.infrastructure.shared.model.QCactAgeDue;
-import net.engining.pcx.cc.infrastructure.shared.model.QCactSubAcct;
+import net.engining.pcx.cc.infrastructure.shared.model.*;
 import net.engining.pcx.cc.param.model.Account;
 import net.engining.pcx.cc.param.model.PostCode;
 import net.engining.pcx.cc.param.model.SubAcct;
@@ -40,8 +14,26 @@ import net.engining.pcx.cc.process.service.support.OffsetService;
 import net.engining.pcx.cc.process.service.support.PostPostEvent;
 import net.engining.pcx.cc.process.service.support.PrePostEvent;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
-import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.joda.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Date;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Service
 public class NewPostService

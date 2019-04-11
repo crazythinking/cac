@@ -1,19 +1,6 @@
 package net.engining.pcx.cc.process.service.impl;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-
 import net.engining.gm.facility.SystemStatusFacility;
 import net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType;
 import net.engining.pcx.cc.infrastructure.shared.model.ApGlBal;
@@ -27,8 +14,17 @@ import net.engining.pcx.cc.process.service.common.AccountingBean;
 import net.engining.pcx.cc.process.service.common.AcctingRecord;
 import net.engining.pcx.cc.process.service.common.GlCalculator;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
-import net.engining.pg.parameter.OrganizationContextHolder;
 import net.engining.pg.parameter.ParameterFacility;
+import net.engining.pg.support.core.context.OrganizationContextHolder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Service
 public class EntryAccountServiceImpl {
@@ -46,14 +42,13 @@ public class EntryAccountServiceImpl {
 	
 	@Autowired
 	private GlCalculator glCalculator;
-	
+
 	/**
 	 * 记会计分录
 	 * @param txnBalance
 	 * @param currency
 	 * @param dbsubject
 	 * @param crsubject
-	 * @param account
 	 * @param txndesc
 	 * @param branch
 	 * @param stDbRedFlag
