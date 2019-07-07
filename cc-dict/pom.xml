@@ -92,7 +92,6 @@
 						</goals>
 						<phase>generate-sources</phase>
 						<configuration>
-							<sourceDirectory>${project.build.directory}/pg-entities</sourceDirectory>
 							<outputDirectory>${project.build.directory}/querydsl-sources</outputDirectory>
 							<processor>com.querydsl.apt.jpa.JPAAnnotationProcessor</processor>
 						</configuration>

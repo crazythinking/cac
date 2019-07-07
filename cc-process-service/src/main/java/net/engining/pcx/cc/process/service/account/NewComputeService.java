@@ -91,8 +91,7 @@ public class NewComputeService {
 	private int balanceScale = 2;
 
 	/**
-	 * 计算计息截止日期； 如果按日计息的情况下，子账户是“LBAL” 或
-	 * 子账户是“LOAN”且当前业务日期不是最后一期的到期日，计息截止日就是当前业务日期+1； 否则就是当前业务日期；
+	 * 针对余额成分按日计息或补计息时，计算计息的截止日期
 	 * 
 	 * @param cactAccount
 	 * @param cactSubAcct
@@ -101,37 +100,36 @@ public class NewComputeService {
 	 * @param tables
 	 * @return
 	 */
-	public LocalDate calcEndDate(CactAccount cactAccount, CactSubAcct cactSubAcct, PaymentPlan paymentPlan, LocalDate endDate,
-			List<InterestTable> tables) {
-		// 当前业务日期是否最后一期到期日
+	public LocalDate calcEndDate(CactAccount cactAccount, CactSubAcct cactSubAcct, PaymentPlan paymentPlan,
+								 LocalDate endDate, List<InterestTable> tables) {
+
+		//当前业务日期是否最后一期到期日
 		PaymentPlanDetail lastDetail = paymentPlan.getDetailsMap().get(paymentPlan.getTotalLoanPeriod());
 		LocalDate curDate = provider7x24.getCurrentDate();
-		boolean lastDay = false;
-		if (lastDetail.getPaymentDate().compareTo(curDate.toDate()) == 0) {
-			lastDay = true;
-		}
+		//当前业务日期是否最后一期的结转日
+		boolean lastDay = lastDetail.getPaymentDate().compareTo(curDate.toDate()) == 0;
+
+		//是否按日计息
+		boolean calcIntByDay = tables.get(0).cycleBase == Interval.D && tables.get(0).cycleBaseMult == 1;
 
 		// 如果当前期数在最后一期之前，还款日当天的利息在还款日当天收掉(因为到期日当天还款，日终批量还是会在当期计一天利息)，最后一期中还款的话当日就不收利息，其实是没有结清。
-		// 总体原则是当天放款当天收息，当天还款就不收息。
-		if (
-		/**
-		 * 这一段可以去掉 //cactAccount.getTotalLoanPeriod() > 1 && //如果只有一期，跑N天收N-1天利息
-		 * //业务日当天预修的利息应该每一期都要修 //cactAccount.getCurrentLoanPeriod() + 1 <
-		 * paymentPlan.getTotalLoanPeriod() &&
-		 **/
 		// 这段逻辑依赖于批量顺序，本金先计息，再结息的情况下，LOAN类型子账户从创建日起每日计息；LBAL类型子账户创建日不计息，之后每天计息；
-		// 因此算头不算尾时，LOAN不需要（在未跑批的情况下）预修当前业务日所属的利息；但LBAL则需要
+		// 因此算头不算尾时，LOAN不需要（在未跑批的情况下）预修当前业务日所属的利息；但LBAL则需要；
+		//是否需要日期+1
+		boolean plusOneDay4LoanOrLbal = (cactSubAcct.getSubAcctType().equals(SubAcctType.SubAcctTypeDef.LBAL.toString())
+								|| (cactSubAcct.getSubAcctType().equals(SubAcctType.SubAcctTypeDef.LOAN.toString()) && !lastDay))
+							&& calcIntByDay;
 
-		(cactSubAcct.getSubAcctType().equals("LBAL") || (cactSubAcct.getSubAcctType().equals("LOAN") && !lastDay))
-				&& tables.get(0).cycleBase == Interval.D && tables.get(0).cycleBaseMult == 1) {
+		if (plusOneDay4LoanOrLbal) {
 			endDate = endDate.plusDays(1);
 		}
+
 		return endDate;
 	}
 
 	/**
-	 * 计算当前子账户的起息日；
-	 * 在子账户上次计息日期为空时，根据起息日类型确定第一次起息日；但对于“LBAL”，需要再加1天，因为产生该子账户的时候就是结息日，已经计息，所以开始计息日是下一日；
+	 * 计算当前余额成分的起息日；
+	 * 在余额成分上次计息日期为空时，根据起息日类型确定第一次起息日；但对于“LBAL”，需要再加1天，因为产生该子账户的时候就是结息日，已经计息，所以开始计息日是下一日；
 	 * 其他情况只要上次计息日期+1
 	 * 
 	 * @param cactSubAcct
@@ -146,11 +144,11 @@ public class NewComputeService {
 			// 第一次计息
 			startDate = calcSetupDate(cactSubAcct, cactAccount, subAcct);
 			// LBAL子账户修利息的时候只修当天就可以了，setUpDate的时候不用计息,导致lastComputingInterestDate是null
-			if ("LBAL".equals(cactSubAcct.getSubAcctType())) {
+			if (SubAcctType.SubAcctTypeDef.LBAL.equals(cactSubAcct.getSubAcctType())) {
 				startDate = startDate.plusDays(1);
 			}
 			// 对于LOAN子账户，存在不计头的情况
-			if ("LOAN".equals(cactSubAcct.getSubAcctType())
+			if (SubAcctType.SubAcctTypeDef.LOAN.equals(cactSubAcct.getSubAcctType())
 					&& (ComputInteHT.NHNT.equals(account.computInteHT) || ComputInteHT.NHYT.equals(account.computInteHT))) {
 				startDate = startDate.plusDays(1);
 			}
@@ -189,8 +187,6 @@ public class NewComputeService {
 	/**
 	 * 获取账户类型参数对象
 	 * 
-	 * @param paramId
-	 *            账户参数代码
 	 * @return 账户类型参数对象
 	 */
 	public Account retrieveAccount(CactSubAcct cactSubAcct) {
@@ -202,13 +198,10 @@ public class NewComputeService {
 	/**
 	 * 获取账户类型参数对象
 	 * 
-	 * @param paramId
-	 *            账户参数代码
 	 * @return 账户类型参数对象
 	 */
 	public Account retrieveAccount(CactAccount cactAccount) {
 		Account account = parameterCacheFacility.getParameter(Account.class, cactAccount.getAcctParamId(), cactAccount.getSetupDate());
-		;
 
 		if (account == null) {
 			throw new IllegalArgumentException("account type does not match product definition");
@@ -291,53 +284,6 @@ public class NewComputeService {
 		return interestTable;
 	}
 
-	/**
-	 * 获取下期账单的还款日
-	 * 
-	 * @param account
-	 *            账户表信息
-	 * @return 下期账单还款日
-	 */
-	@SuppressWarnings("deprecation")
-	public Date getNextPaymentDay(CactAccount cactAccount) {
-		// 获取账户参数
-		Account account = retrieveAccount(cactAccount);
-
-		// 还款日
-		Date paymentDay = null;
-		/**
-		 * //根据账户属性中的还款日类型，决定哪天作为最后还款日 switch (account.paymentDueDay){
-		 * //最后还款日类型为账单日后的固定天数 //最后还款日= 上一账单日 + 固定天数 case D: paymentDay =
-		 * DateUtils.addDays(cactAccount.getNextStmtDate(),
-		 * account.pmtDueDays);break;
-		 * 
-		 * //最后还款日类型为账单日后固定日期 case F: paymentDay =
-		 * DateUtils.setDays(cactAccount.getNextStmtDate(), account.pmtDueDays);
-		 * while (paymentDay.before(cactAccount.getNextStmtDate())){ paymentDay
-		 * = DateUtils.addMonths(paymentDay, 1); } break;
-		 * 
-		 * //找不到值抛异常 default : throw new
-		 * IllegalArgumentException("账户属性中还款日类型不正确"); }
-		 */
-		if (account.isLockPaymentDay) {
-			// 先算出结息日是1月份所对应的最后还款日，以后的最后还款日都取这一天。
-			Date stdDate = DateUtils.setMonths(cactAccount.getSetupDate(), 0);
-			stdDate = DateUtils.setDays(stdDate, 1);
-			Date junInterestDate = getNextInterstDate(cactAccount, stdDate, account, cactAccount.getBillingCycle());
-			if (account.pmtDueDays == null)
-				account.pmtDueDays = 0;
-			Date junPaymentDate = DateUtils.addDays(junInterestDate, account.pmtDueDays);
-			int payDay = junPaymentDate.getDate();
-			paymentDay = processPaymentDay(cactAccount.getInterestDate(), payDay);
-			if (paymentDay.before(cactAccount.getInterestDate())) {
-				paymentDay = DateUtils.addMonths(paymentDay, 1);
-			}
-		}
-		else {
-			paymentDay = DateUtils.addDays(cactAccount.getInterestDate(), account.pmtDueDays);
-		}
-		return paymentDay;
-	}
 
 	/**
 	 * 计算账户下所有子账户的余额
@@ -352,8 +298,9 @@ public class NewComputeService {
 		for (CactSubAcct cactSubAcct : cactSubAccts) {
 			SubAcct subAcct = retrieveSubAcct(cactSubAcct);
 			// 参与超限计算 == True, 账户总余额 = 账户当前余额
-			if (subAcct.overlimitQualify)
+			if (subAcct.overlimitQualify) {
 				totalBal = totalBal.add(cactSubAcct.getEndDayBal());
+			}
 		}
 		return totalBal;
 	}
@@ -391,7 +338,6 @@ public class NewComputeService {
 	/**
 	 * 计算账单所有应还款额
 	 * 
-	 * @param accountInfo
 	 * @return
 	 */
 	public BigDecimal calcQualGraceBal(List<CactSubAcct> cactSubAccts) {
@@ -418,7 +364,6 @@ public class NewComputeService {
 	/**
 	 * 计算下一约定还款日期
 	 * 
-	 * @param account
 	 * @return
 	 */
 	public Date getNextDDDay(CactAccount cactAccount) {
@@ -439,8 +384,6 @@ public class NewComputeService {
 	 * 
 	 * @param cactSubAcct
 	 *            子账户信息
-	 * @param stmt
-	 *            账期
 	 * @return 账期余额
 	 */
 	public BigDecimal getStmtBal(CactSubAcct cactSubAcct) {
@@ -451,8 +394,9 @@ public class NewComputeService {
 						qCactSubAcct.stmtHist.eq(cactSubAcct.getStmtHist()))
 				.fetchOne();
 
-		if (totalBalance == null)
+		if (totalBalance == null) {
 			totalBalance = BigDecimal.ZERO;
+		}
 
 		return totalBalance;
 	}
@@ -464,8 +408,6 @@ public class NewComputeService {
 	 *            子账户信息
 	 * @param cactAccount
 	 *            账户信息
-	 * @param Account
-	 *            账户参数
 	 * @return 罚息额
 	 */
 	public BigDecimal getComputePnitBal(CactAccount cactAccount, CactSubAcct cactSubAcct, Account account) {
@@ -474,7 +416,7 @@ public class NewComputeService {
 		BigDecimal subBal = getStmtBal(cactSubAcct); 
 
 		// 是否计算罚息
-		if (account.isPnit) {
+		if (account.whetherPnit) {
 			if (subBal.compareTo(BigDecimal.ZERO) > 0){
 				// 全额本金计算罚息，只需要对LBAL子账户计算罚息，但是按全额本金计算
 				if (PnitType.A.equals(account.pnitType)) {
@@ -565,8 +507,9 @@ public class NewComputeService {
 						(qCactSubAcct.subAcctType.eq("LOAN").or(qCactSubAcct.subAcctType.eq("LBAL"))))
 				.fetchOne();
 
-		if (totalBalance == null)
+		if (totalBalance == null) {
 			totalBalance = BigDecimal.ZERO;
+		}
 
 		return totalBalance;
 	}
@@ -574,8 +517,6 @@ public class NewComputeService {
 	/**
 	 * 获取单个账户的下期账单的宽限日
 	 * 
-	 * @param account
-	 *            账户信息
 	 * @return 下期账单宽限日
 	 */
 	public Date getNextGraceDay(CactAccount cactAccount) {
@@ -720,8 +661,9 @@ public class NewComputeService {
 			else if (acctParam.intUnit == Interval.Y) {
 				natDate = DateUtils.addYears(natDate, acctParam.intUnitMult);
 			}
-			else
+			else {
 				throw new IllegalArgumentException("最小结息周期单位" + acctParam.intUnit + "配置有误");
+			}
 		}
 		return natDate;
 	}
@@ -990,7 +932,7 @@ public class NewComputeService {
 		// 设置主账户参数
 		Account acct = new Account();
 		acct.description = acctount.description;
-		acct.isLockPaymentDay = false;
+		acct.lockPaymentDay = false;
 		acct.businessType = acctount.businessType;
 		acct.currencyCode = "156";
 		acct.genAcctMethod = GenAcctMethod.N;
@@ -998,7 +940,7 @@ public class NewComputeService {
 		acct.carryType = TransformType.D;
 		acct.pnitType = acctount.pnitType;
 		acct.advanceType = acctount.advanceType;
-		acct.isPnit = true;
+		acct.whetherPnit = true;
 		acct.effectiveDate = acctount.effectiveDate;
 
 		acct.pmtDueDays = 0;

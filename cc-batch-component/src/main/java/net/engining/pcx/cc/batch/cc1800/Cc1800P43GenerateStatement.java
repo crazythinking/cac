@@ -7,6 +7,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import net.engining.pcx.cc.process.service.account.PaymentDateCalculationService;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,9 @@ public class Cc1800P43GenerateStatement implements ItemProcessor<Cc1800IPostingI
 	 */
 	@Autowired
 	private BlockCodeUtils blockCodeUtils;
+
+	@Autowired
+	private PaymentDateCalculationService paymentDateCalculationService;
 	
 	/**
 	 * 最小还款额及账龄计算业务组件
@@ -205,7 +209,7 @@ public class Cc1800P43GenerateStatement implements ItemProcessor<Cc1800IPostingI
 		// 设置下个还款日
 		if (account.getCurrentLoanPeriod() < account.getTotalLoanPeriod()
 				|| account.getTotalLoanPeriod() == -1) {
-			account.setPmtDueDate(commonCompute.getNextPaymentDay(account));
+			account.setPmtDueDate(paymentDateCalculationService.getNextPaymentDay(account));
 			// 宽限日期的设定必须在账单日设定之前
 			account.setGraceDate(commonCompute.getNextGraceDay(account));
 		}		
@@ -233,8 +237,6 @@ public class Cc1800P43GenerateStatement implements ItemProcessor<Cc1800IPostingI
 	/**
 	 * 创建账单统计信息 必须在账户状态更新之前进行
 	 * 
-	 * @param accountInfo
-	 * @param batchDate
 	 * @return
 	 */
 	private CactStmtHst createStmtHst(CactAccount cactAccount, List<CactSubAcct> cactSubAccts, BigDecimal bal) {
@@ -245,7 +247,7 @@ public class Cc1800P43GenerateStatement implements ItemProcessor<Cc1800IPostingI
 		// 设置账单日期
 		cactStmtHst.setStmtDate(batchDate);
 		// 设置还款日
-		cactStmtHst.setPmtDueDate(commonCompute.getNextPaymentDay(cactAccount));
+		cactStmtHst.setPmtDueDate(paymentDateCalculationService.getNextPaymentDay(cactAccount));
 		// 设置生成账单类型
 		cactStmtHst.setStmtFlag(calcStatementFlag(cactAccount, bal));
 		// 设置上期账单期初余额
@@ -305,7 +307,6 @@ public class Cc1800P43GenerateStatement implements ItemProcessor<Cc1800IPostingI
 	/**
 	 * 检验生成的账单类型
 	 * 
-	 * @param accountInfo
 	 * @return
 	 */
 	private Boolean calcStatementFlag(CactAccount cactAccount, BigDecimal bal) {

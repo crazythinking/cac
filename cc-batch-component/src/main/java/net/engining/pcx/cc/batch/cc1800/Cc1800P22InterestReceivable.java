@@ -102,7 +102,8 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 							){
 						for (InterestTable interestTable : tables)
 						{
-							receivableTable=interestTable;  //直接取利率
+							//直接取利率
+							receivableTable=interestTable;
 						}
 						if (receivableTable != null)
 						{

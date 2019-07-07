@@ -1,40 +1,10 @@
 package net.engining.pcx.cc.process.service.impl;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.commons.lang3.SerializationUtils;
-import org.joda.time.Days;
-import org.joda.time.LocalDate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.querydsl.jpa.impl.JPAQueryFactory;
-
 import net.engining.gm.infrastructure.enums.Interval;
 import net.engining.gm.param.model.OrganizationInfo;
-import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
-import net.engining.pcx.cc.infrastructure.shared.model.CactLoanPaymentDetail;
-import net.engining.pcx.cc.infrastructure.shared.model.CactLoanPaymentPlan;
-import net.engining.pcx.cc.infrastructure.shared.model.CactSubAcct;
-import net.engining.pcx.cc.infrastructure.shared.model.QCactLoanPaymentDetail;
-import net.engining.pcx.cc.infrastructure.shared.model.QCactLoanPaymentPlan;
-import net.engining.pcx.cc.infrastructure.shared.model.QCactSubAcct;
-import net.engining.pcx.cc.param.model.Account;
-import net.engining.pcx.cc.param.model.InterestTable;
-import net.engining.pcx.cc.param.model.RateCalcMethod;
-import net.engining.pcx.cc.param.model.SubAcct;
-import net.engining.pcx.cc.param.model.SubAcctType;
+import net.engining.pcx.cc.infrastructure.shared.model.*;
+import net.engining.pcx.cc.param.model.*;
 import net.engining.pcx.cc.param.model.enums.CalcMethod;
 import net.engining.pcx.cc.param.model.enums.LoanFeeMethod;
 import net.engining.pcx.cc.param.model.enums.PaymentMethod;
@@ -42,6 +12,7 @@ import net.engining.pcx.cc.param.model.enums.PrePaySettlementType;
 import net.engining.pcx.cc.process.model.PaymentPlan;
 import net.engining.pcx.cc.process.model.PaymentPlanDetail;
 import net.engining.pcx.cc.process.service.PaymentPlanService;
+import net.engining.pcx.cc.process.service.account.PaymentDateCalculationService;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.account.NewInterestService;
 import net.engining.pcx.cc.process.service.account.NewPaymentPlanCalcService;
@@ -49,8 +20,19 @@ import net.engining.pcx.cc.process.service.account.NewPaymentPlanCalcService.Tem
 import net.engining.pcx.cc.process.service.common.InterestTableConvertService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
-import net.engining.pg.support.utils.DateUtilsExt;
 import net.engining.pg.support.utils.ValidateUtilExt;
+import org.apache.commons.lang3.SerializationUtils;
+import org.joda.time.Days;
+import org.joda.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
 
 public class PaymentPlanServiceImpl implements PaymentPlanService {
 
@@ -79,10 +61,10 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 
 	@Autowired
 	private NewPaymentPlanCalcService newPaymentPlanCalcService;
-	
-//	@Autowired
-//	private NewAgeService newAgeService;
 
+	@Autowired
+	private PaymentDateCalculationService dateCaculation4LoanService;
+	
 	private QCactLoanPaymentPlan qLoanPaymentPlan = QCactLoanPaymentPlan.cactLoanPaymentPlan;
 
 	private QCactLoanPaymentDetail qLoanPaymentDetail = QCactLoanPaymentDetail.cactLoanPaymentDetail;
@@ -170,13 +152,13 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			// 计算还款日, 还款固定日为0或大于31(月内最大值)时，均表示非固定日还款
 			if (fixedPmtDay != 0 || fixedPmtDay > 31) {
 				// 确定fixedDate
-				detail = newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedPmtDay, mult, 0, i, detail);
-				detail = newPaymentPlanCalcService.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, fixedPmtDay, mult, 0, i, detail);
+				detail = dateCaculation4LoanService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedPmtDay, mult, 0, i, detail);
+				detail = dateCaculation4LoanService.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, fixedPmtDay, mult, 0, i, detail);
 				
 			}
 			else {
-				detail = newPaymentPlanCalcService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, mult, pmtDueDays, i, detail);
-				detail = newPaymentPlanCalcService.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, mult, pmtDueDays, i, detail);
+				detail = dateCaculation4LoanService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, mult, pmtDueDays, i, detail);
+				detail = dateCaculation4LoanService.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, mult, pmtDueDays, i, detail);
 			}
 
 			// 计算应收利息
@@ -212,18 +194,21 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 	public BigDecimal getCalculateInte(CactAccount cactAccount) {
 		Account account = newComputeService.retrieveAccount(cactAccount);
 		BigDecimal intAmt = new BigDecimal(0);
-		if (cactAccount.getCurrentLoanPeriod() >= cactAccount.getTotalLoanPeriod())
+		if (cactAccount.getCurrentLoanPeriod() >= cactAccount.getTotalLoanPeriod()) {
 			return intAmt; // 说明最后一期已经结转出来,无需试算
+		}
 		// 余额成分提前结出来的情况
 		Integer period = cactAccount.getCurrentLoanPeriod() + 1; // 结转以后的期次
 		boolean flag = false;
-		if (PrePaySettlementType.D.equals(account.advanceType) && provider7x24.getCurrentDate().compareTo(new LocalDate(cactAccount.getInterestDate())) == 0)
+		if (PrePaySettlementType.D.equals(account.advanceType) && provider7x24.getCurrentDate().compareTo(new LocalDate(cactAccount.getInterestDate())) == 0) {
 			flag = true;// 还款日期为到期日时，按到期日当天的利息做计算
+		}
 
 		if (PrePaySettlementType.M.equals(account.advanceType) || flag) { // 提前还款参数为收取按月利息
 			PaymentPlan paymentPlan = getPaymentPlan(cactAccount.getAcctSeq());
-			if (paymentPlan == null)
+			if (paymentPlan == null) {
 				return null;
+			}
 			PaymentPlanDetail paymentPlanDetail = paymentPlan.getDetailsMap().get(period);
 			intAmt = paymentPlanDetail.getInterestAmt();
 		}
@@ -388,8 +373,8 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 	
 	/**
 	 * 比较持久化的还款计划明细，与修正后的还款计划明细
-	 * @param plan
 	 * @param detail
+	 * @param loanDetail
 	 * @return
 	 */
 	private boolean isDiffPaymentPlanDetail(PaymentPlanDetail detail, CactLoanPaymentDetail loanDetail){
@@ -476,8 +461,9 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			// 第一次计息
 			startDate = calcSetupDate(cactSubAcct, cactAccount, subAcct);
 			// LBAL子账户修利息的时候只修当天就可以了，setUpDate的时候不用计息,导致lastComputingInterestDate是null
-			if ("LBAL".equals(cactSubAcct.getSubAcctType()))
+			if ("LBAL".equals(cactSubAcct.getSubAcctType())) {
 				startDate = startDate.plusDays(1);
+			}
 		}
 		else {
 			startDate = new LocalDate(cactSubAcct.getLastComputingInterestDate()).plusDays(1);
@@ -627,7 +613,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		}
 		if (paymentPlan == null) {
 			// 固定日还款
-			if (account.isLockPaymentDay) {
+			if (account.lockPaymentDay) {
 				paymentPlan = regPaymentPlan(
 						cactAccount.getStartDate(),
 						cactAccount.getTotalLoanPeriod(), 
@@ -1178,9 +1164,11 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 
 		List<PaymentPlanDetail> details = paymentPlan.getDetails();
 		Map<Integer, PaymentPlanDetail> detailsMap = paymentPlan.getDetailsMap();
-		int beginPeriod = cactAccount.getTotalLoanPeriod() - paymentPlan.getDetailsMap().size(); // 还款计划开始期次
-		if (beginPeriod == 0)
+		// 还款计划开始期次
+		int beginPeriod = cactAccount.getTotalLoanPeriod() - paymentPlan.getDetailsMap().size();
+		if (beginPeriod == 0) {
 			return paymentPlan;
+		}
 
 		for (PaymentPlanDetail paymentPlanDetail : paymentPlan.getDetailsMap().values()) {
 			paymentPlanDetail.setLoanPeriod(beginPeriod + 1);
@@ -1196,8 +1184,9 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			// detail.setFeeAmt(BigDecimal.ZERO);
 			detail.setTotalRepayAmt(BigDecimal.ZERO);
 			detail.setPrincipalBal(BigDecimal.ZERO);
-			if (i == 1)
+			if (i == 1) {
 				paymentDate = cactAccount.getSetupDate();
+			}
 			paymentDate = newComputeService.getNextInterstDate(cactAccount, paymentDate, acctParam, cactAccount.getBillingCycle());
 			detail.setPaymentDate(paymentDate);
 			

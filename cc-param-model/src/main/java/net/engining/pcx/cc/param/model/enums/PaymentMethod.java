@@ -23,10 +23,12 @@ public enum PaymentMethod {
 	 * 等额本金
 	 */
 	MRT,
+
 	/**
 	 * 等额本金-剩余靠前
 	 */
 	MRF,
+
 	/**
 	 * 等额本金-剩余靠前特殊固定日还款
 	 */
@@ -36,10 +38,12 @@ public enum PaymentMethod {
 	 * 等额本息
 	 */
 	MSV,
+
 	/**
 	 * 等额本息-剩余靠前
 	 */
 	MSB,
+
 	/**
 	 * 等额本息-剩余靠前特殊固定日还款
 	 */
@@ -54,6 +58,7 @@ public enum PaymentMethod {
 	 * 分期先息后本
 	 */
 	IFP,
+
 	/**
 	 * 分期先息后本(利息前置)
 	 */
@@ -63,6 +68,7 @@ public enum PaymentMethod {
 	 * 循环信用：按账期还款(信用支付)
 	 */
 	MPA,
+
 	/**
 	 * 利随本清
 	 */

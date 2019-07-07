@@ -2,7 +2,6 @@ package net.engining.pcx.cc.process.service.impl;
 
 import com.google.common.base.Optional;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import net.engining.gm.facility.SystemStatusFacility;
 import net.engining.gm.infrastructure.enums.Interval;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccountNo;
@@ -30,9 +29,6 @@ public class AccountManageServiceImpl implements AccountManageService{
 
 	@Autowired
 	private ParameterFacility paramFacility;
-	
-	@Autowired
-	private SystemStatusFacility systemStatusFacility;
 	
 	@PersistenceContext
 	private EntityManager em;
@@ -87,7 +83,6 @@ public class AccountManageServiceImpl implements AccountManageService{
 	 */
 	@Override
 	public int createAccount(AccountInfo acctInfo) {
-//		SystemStatus system = systemStatusFacility.getSystemStatus();
 		CactAccount acct = new CactAccount();
 		acct.setAcctNo(acctInfo.getAcctNo());
 		acct.setAcctParamId(acctInfo.getParamId());
@@ -105,28 +100,37 @@ public class AccountManageServiceImpl implements AccountManageService{
 		Account acctParam = paramFacility.loadParameter(Account.class, acct.getAcctParamId(), provider7x24.getCurrentDate().toDate());
 		acct.setBusinessType(acctParam.businessType);
 		acct.setCurrCd(acctParam.currencyCode);
+		//是否已全额还款
 		acct.setGraceDaysFullInd(true);
 		acct.setAgeCd("0");
-		
+
+		//账户额度
 		if(acctInfo.getAcctLimit() != null){
 			acct.setAcctLimit(acctInfo.getAcctLimit());
-		}else{
+		}
+		else{
 			acct.setAcctLimit(acctParam.defaultLimit == null ? BigDecimal.ZERO : new BigDecimal(acctParam.defaultLimit));
 		}
+		//网点
 		acct.setOwningBranch(acctInfo.getOwningBranch());
-		
+
+		//总贷款期数
 		if (acctInfo.getTotalLoanPeriod() != null) {
 			acct.setTotalLoanPeriod(acctInfo.getTotalLoanPeriod());
 		}
 		else {
 			acct.setTotalLoanPeriod(acctParam.intSettleFrequency);
 		}
-		
-		if(-1 == acct.getTotalLoanPeriod())
+
+		//当前贷款期数
+		if(-1 == acct.getTotalLoanPeriod()) {
 			acct.setCurrentLoanPeriod(-1);
-		else
+		}
+		else {
 			acct.setCurrentLoanPeriod(0);
-		
+		}
+
+		//系统内自动扣款账号
 		if (acctInfo.getAutoPayAcctSeqInSystem() != null) {
 			CactAccount cactAccount = em.find(CactAccount.class, acctInfo.getAutoPayAcctSeqInSystem());
 			if (cactAccount == null) {
@@ -143,7 +147,7 @@ public class AccountManageServiceImpl implements AccountManageService{
 			}	
 		}
 
-		Date interestStartDate = null;
+		Date interestStartDate;
 		if (acctParam.intUnit == Interval.D && (acctParam.intFirstPeriodAdj == null || !acctParam.intFirstPeriodAdj)) {
 			interestStartDate = DateUtils.addDays(acct.getSetupDate(), -1);
 		}
@@ -162,11 +166,13 @@ public class AccountManageServiceImpl implements AccountManageService{
 		acct.setQualGraceBal(BigDecimal.ZERO);
 		acct.setTotDueAmt(BigDecimal.ZERO);
 		
-		// FIXME 修正
+		//FIXME 修正
 		acct.setGraceDaysFullInd(true);
-		acct.setOwningBranch(OrganizationContextHolder.getCurrentOrganizationId());//FIXME 增加按所属分支行
+		//FIXME 增加按所属分支行
+		acct.setOwningBranch(OrganizationContextHolder.getCurrentOrganizationId());
 //		acct.setPaymentHist(" ");
-//		acct.setBillingCycle(" "); //oracle不允许在nullable的字段里插入空值，所以改为空格 2014.12.17
+		//oracle不允许在nullable的字段里插入空值，所以改为空格 2014.12.17
+//		acct.setBillingCycle(" ");
 		acct.setWaiveLatefeeInd(false);
 		acct.setBizDate(provider7x24.getCurrentDate().toDate());
 		acct.fillDefaultValues();

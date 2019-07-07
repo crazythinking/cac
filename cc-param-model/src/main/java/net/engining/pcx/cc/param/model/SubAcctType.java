@@ -5,7 +5,7 @@ import java.io.Serializable;
 import net.engining.pg.support.meta.PropertyInfo;
 
 /**
- * 子帐户类型
+ * 余额成分类型
  */
 public class SubAcctType implements Serializable {
 
