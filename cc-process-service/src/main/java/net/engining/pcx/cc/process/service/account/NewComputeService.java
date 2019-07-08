@@ -39,7 +39,6 @@ import net.engining.pcx.cc.param.model.RateCalcMethod;
 import net.engining.pcx.cc.param.model.SubAcct;
 import net.engining.pcx.cc.param.model.SubAcctType;
 import net.engining.pcx.cc.param.model.enums.CalcMethod;
-import net.engining.pcx.cc.param.model.enums.ComputInteHT;
 import net.engining.pcx.cc.param.model.enums.CycleStartDay;
 import net.engining.pcx.cc.param.model.enums.DelqTolInd;
 import net.engining.pcx.cc.param.model.enums.DownpmtTolInd;
@@ -49,8 +48,6 @@ import net.engining.pcx.cc.param.model.enums.PaymentMethod;
 import net.engining.pcx.cc.param.model.enums.PnitType;
 import net.engining.pcx.cc.param.model.enums.TierInd;
 import net.engining.pcx.cc.param.model.enums.TransformType;
-import net.engining.pcx.cc.process.model.PaymentPlan;
-import net.engining.pcx.cc.process.model.PaymentPlanDetail;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
 
@@ -90,100 +87,6 @@ public class NewComputeService {
 
 	private int balanceScale = 2;
 
-	/**
-	 * 针对余额成分按日计息或补计息时，计算计息的截止日期
-	 * 
-	 * @param cactAccount
-	 * @param cactSubAcct
-	 * @param paymentPlan
-	 * @param endDate
-	 * @param tables
-	 * @return
-	 */
-	public LocalDate calcEndDate(CactAccount cactAccount, CactSubAcct cactSubAcct, PaymentPlan paymentPlan,
-								 LocalDate endDate, List<InterestTable> tables) {
-
-		//当前业务日期是否最后一期到期日
-		PaymentPlanDetail lastDetail = paymentPlan.getDetailsMap().get(paymentPlan.getTotalLoanPeriod());
-		LocalDate curDate = provider7x24.getCurrentDate();
-		//当前业务日期是否最后一期的结转日
-		boolean lastDay = lastDetail.getPaymentDate().compareTo(curDate.toDate()) == 0;
-
-		//是否按日计息
-		boolean calcIntByDay = tables.get(0).cycleBase == Interval.D && tables.get(0).cycleBaseMult == 1;
-
-		// 如果当前期数在最后一期之前，还款日当天的利息在还款日当天收掉(因为到期日当天还款，日终批量还是会在当期计一天利息)，最后一期中还款的话当日就不收利息，其实是没有结清。
-		// 这段逻辑依赖于批量顺序，本金先计息，再结息的情况下，LOAN类型子账户从创建日起每日计息；LBAL类型子账户创建日不计息，之后每天计息；
-		// 因此算头不算尾时，LOAN不需要（在未跑批的情况下）预修当前业务日所属的利息；但LBAL则需要；
-		//是否需要日期+1
-		boolean plusOneDay4LoanOrLbal = (cactSubAcct.getSubAcctType().equals(SubAcctType.SubAcctTypeDef.LBAL.toString())
-								|| (cactSubAcct.getSubAcctType().equals(SubAcctType.SubAcctTypeDef.LOAN.toString()) && !lastDay))
-							&& calcIntByDay;
-
-		if (plusOneDay4LoanOrLbal) {
-			endDate = endDate.plusDays(1);
-		}
-
-		return endDate;
-	}
-
-	/**
-	 * 计算当前余额成分的起息日；
-	 * 在余额成分上次计息日期为空时，根据起息日类型确定第一次起息日；但对于“LBAL”，需要再加1天，因为产生该子账户的时候就是结息日，已经计息，所以开始计息日是下一日；
-	 * 其他情况只要上次计息日期+1
-	 * 
-	 * @param cactSubAcct
-	 * @param cactAccount
-	 * @param subAcct
-	 * @param account
-	 * @return
-	 */
-	public LocalDate calcStartDate(CactSubAcct cactSubAcct, CactAccount cactAccount, SubAcct subAcct, Account account) {
-		LocalDate startDate;
-		if (cactSubAcct.getLastComputingInterestDate() == null) {
-			// 第一次计息
-			startDate = calcSetupDate(cactSubAcct, cactAccount, subAcct);
-			// LBAL子账户修利息的时候只修当天就可以了，setUpDate的时候不用计息,导致lastComputingInterestDate是null
-			if (SubAcctType.SubAcctTypeDef.LBAL.equals(cactSubAcct.getSubAcctType())) {
-				startDate = startDate.plusDays(1);
-			}
-			// 对于LOAN子账户，存在不计头的情况
-			if (SubAcctType.SubAcctTypeDef.LOAN.equals(cactSubAcct.getSubAcctType())
-					&& (ComputInteHT.NHNT.equals(account.computInteHT) || ComputInteHT.NHYT.equals(account.computInteHT))) {
-				startDate = startDate.plusDays(1);
-			}
-		}
-		else {
-			startDate = new LocalDate(cactSubAcct.getLastComputingInterestDate()).plusDays(1);
-		}
-		return startDate;
-	}
-
-	/**
-	 * 计算余额成分（子账户）的起息日
-	 * 
-	 * @param cactSubAcct
-	 * @param cactAccount
-	 * @param subAcct
-	 * @return
-	 */
-	public LocalDate calcSetupDate(CactSubAcct cactSubAcct, CactAccount cactAccount, SubAcct subAcct) {
-		LocalDate setupDate;
-		switch (subAcct.intAccumFrom) {
-			case C:
-				// 取上一账单日。这类余额肯定存在上一账单日数据
-				setupDate = new LocalDate(cactAccount.getLastInterestDate()).plusDays(subAcct.postponeDays);
-				break;
-			case P:
-				// 取子账户建立日期
-				setupDate = new LocalDate(cactSubAcct.getSetupDate()).plusDays(subAcct.postponeDays);
-				break;
-			default:
-				throw new IllegalArgumentException("should not be here");
-		}
-		return setupDate;
-	}
-	
 	/**
 	 * 获取账户类型参数对象
 	 * 
@@ -420,7 +323,7 @@ public class NewComputeService {
 			if (subBal.compareTo(BigDecimal.ZERO) > 0){
 				// 全额本金计算罚息，只需要对LBAL子账户计算罚息，但是按全额本金计算
 				if (PnitType.A.equals(account.pnitType)) {
-					if (SubAcctType.SubAcctTypeDef.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
+					if (SubAcctType.DefaultSubAcctType.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
 						// 本金全额
 						pnitBal = cactAccount.getTotalLoanPrincipalAmt();
 					}
@@ -430,7 +333,7 @@ public class NewComputeService {
 				}
 				// 全部剩余本金计算罚息，只需要对LBAL子账户计算罚息，但是按全部剩余本金计算
 				else if (PnitType.B.equals(account.pnitType)) {
-					if (SubAcctType.SubAcctTypeDef.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
+					if (SubAcctType.DefaultSubAcctType.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
 						BigDecimal totalCapi = getTotalCapi(cactSubAcct);
 						pnitBal = totalCapi;
 					}
@@ -438,40 +341,40 @@ public class NewComputeService {
 				// 全部剩余本金+逾期利息，只需要对LBAL和INTE子账户计算罚息，但是按全部剩余本金和逾期应还利息分别计算
 				// 由于是针对每一个cactSubAcct分别处理的，所以分别返回各cactSubAcct的自己的初始额，但注意该cactSubAcct的罚息利率code必须有值，且对应参数利率值需要大于0
 				else if (PnitType.G.equals(account.pnitType)) {
-					if (SubAcctType.SubAcctTypeDef.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
+					if (SubAcctType.DefaultSubAcctType.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
 						BigDecimal totalCapi = getTotalCapi(cactSubAcct);
 						pnitBal = totalCapi;
 					}
-					else if(SubAcctType.SubAcctTypeDef.INTE.toString().equals(cactSubAcct.getSubAcctType())){
+					else if(SubAcctType.DefaultSubAcctType.INTE.toString().equals(cactSubAcct.getSubAcctType())){
 						pnitBal = cactSubAcct.getEndDayBal();
 					}
 				}
 				// 本期全部本金，只需要对LBAL子账户计算罚息，但是按该期的全部本金计算罚息。 比如第一期到期本金10w，利息500，还了部分1w，但是罚息按10w算
 				else if (PnitType.C.equals(account.pnitType)) {
-					if (SubAcctType.SubAcctTypeDef.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
+					if (SubAcctType.DefaultSubAcctType.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
 						pnitBal = cactSubAcct.getBeginBal();
 					}
 				}
 				// 本期本息和，按该期的本金和利息分别计算罚息。 比如第一期到期本金10w，利息500，还了部分，罚息按10w+500算；
 				// 由于是针对每一个cactSubAcct分别处理的，所以分别返回各cactSubAcct的自己的初始额，但注意该cactSubAcct的罚息利率code必须有值，且对应参数利率值需要大于0
 				else if (PnitType.D.equals(account.pnitType)) {
-					if (SubAcctType.SubAcctTypeDef.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
+					if (SubAcctType.DefaultSubAcctType.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
 						pnitBal = cactSubAcct.getBeginBal();
 					}
-					else if(SubAcctType.SubAcctTypeDef.INTE.toString().equals(cactSubAcct.getSubAcctType())){
+					else if(SubAcctType.DefaultSubAcctType.INTE.toString().equals(cactSubAcct.getSubAcctType())){
 						pnitBal = cactSubAcct.getEndDayBal();
 					}
 				}
 				// 本期剩余应还本金，逾期多少本金就算多少罚息 比如第一期到期本金10w，利息500，还了部分，按剩余应还本金算
 				else if (PnitType.E.equals(account.pnitType)) {
-					if (SubAcctType.SubAcctTypeDef.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
+					if (SubAcctType.DefaultSubAcctType.LBAL.toString().equals(cactSubAcct.getSubAcctType())) {
 						pnitBal = cactSubAcct.getEndDayBal();
 					}
 				}
 				//本期剩余应还本息和，逾期多少本金和利息就算多少罚息
 				else if (PnitType.F.equals(account.pnitType)) {
-					if(SubAcctType.SubAcctTypeDef.LBAL.toString().equals(cactSubAcct.getSubAcctType()) || 
-							SubAcctType.SubAcctTypeDef.INTE.toString().equals(cactSubAcct.getSubAcctType())){
+					if(SubAcctType.DefaultSubAcctType.LBAL.toString().equals(cactSubAcct.getSubAcctType()) ||
+							SubAcctType.DefaultSubAcctType.INTE.toString().equals(cactSubAcct.getSubAcctType())){
 						pnitBal = cactSubAcct.getEndDayBal();
 					}
 				}
@@ -905,7 +808,6 @@ public class NewComputeService {
 		sa.penalizedInterestPastDuePostCode = "IB000045";
 		sa.penalizedInterestTable = "Z0001";
 		sa.planPurgeDays = 30;
-		sa.postponeDays = 0;
 		sa.supportStmtLoan = false;
 		sa.transMergeMethod = subAcct.transMergeMethod;
 		sa.writeOffInd = false;
@@ -994,15 +896,7 @@ public class NewComputeService {
 	public BigDecimal calcPrincipalAmt(BigDecimal bal, Integer acctSeq) {
 		CactAccount cactAccount = em.find(CactAccount.class, acctSeq);
 		Account account = retrieveAccount(cactAccount);
-		QCactSubAcct qCactSubAcct = QCactSubAcct.cactSubAcct;
-		List<CactSubAcct> subAccts = new JPAQueryFactory(em).select(qCactSubAcct).from(qCactSubAcct)
-				.where(qCactSubAcct.acctSeq.eq(cactAccount.getAcctSeq())).fetch();
-		CactSubAcct loanSubAcct = null;
-		for (CactSubAcct cactSubAcct : subAccts) {
-			if (cactSubAcct.getSubAcctType().equals("LOAN")) {
-				loanSubAcct = cactSubAcct;
-			}
-		}
+		CactSubAcct loanSubAcct = getCactSubAcct4Loan(cactAccount.getAcctSeq());
 		SubAcct subAcct = retrieveSubAcct(loanSubAcct, cactAccount);
 
 		LocalDate startDate = cactAccount.getLastInterestDate() == null ? new LocalDate(cactAccount.getSetupDate())
@@ -1059,6 +953,24 @@ public class NewComputeService {
 				rate = inttable.chargeRates.get(0).rate;
 		}
 		return rate;
+	}
+
+	/**
+	 * 根据Actseq获取LOAN的余额成分
+	 * @param acctSeq
+	 * @return
+	 */
+	public CactSubAcct getCactSubAcct4Loan(int acctSeq) {
+		QCactSubAcct qCactSubAcct = QCactSubAcct.cactSubAcct;
+		List<CactSubAcct> subAccts = new JPAQueryFactory(em).select(qCactSubAcct).from(qCactSubAcct)
+				.where(qCactSubAcct.acctSeq.eq(acctSeq)).fetch();
+		CactSubAcct loanSubAcct = null;
+		for (CactSubAcct cactSubAcct : subAccts) {
+			if (SubAcctType.DefaultSubAcctType.LOAN.toString().equals(cactSubAcct.getSubAcctType())) {
+				loanSubAcct = cactSubAcct;
+			}
+		}
+		return loanSubAcct;
 	}
 
 	public int getAccrualScale() {

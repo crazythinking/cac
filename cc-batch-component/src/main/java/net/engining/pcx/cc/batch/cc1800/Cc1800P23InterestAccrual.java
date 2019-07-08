@@ -1,19 +1,6 @@
 package net.engining.pcx.cc.batch.cc1800;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import org.joda.time.LocalDate;
-import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import com.google.common.collect.ImmutableList;
-
 import net.engining.gm.infrastructure.enums.AgeGroupCd;
 import net.engining.pcx.cc.infrastructure.shared.enums.TxnDetailType;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
@@ -28,10 +15,22 @@ import net.engining.pcx.cc.process.service.account.NewAgeService;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.account.NewInterestService;
 import net.engining.pcx.cc.process.service.account.NewInterestService.InterestCycleRestMethod;
+import net.engining.pcx.cc.process.service.account.date.AccrualInterestDateCalculationService;
 import net.engining.pcx.cc.process.service.common.BlockCodeUtils;
 import net.engining.pcx.cc.process.service.impl.InternalAccountService;
 import net.engining.pcx.cc.process.service.ledger.InterestSettleListener;
 import net.engining.pcx.cc.process.service.ledger.NewLedgerService;
+import org.joda.time.LocalDate;
+import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -64,6 +63,9 @@ public class Cc1800P23InterestAccrual implements ItemProcessor<Cc1800IPostingInf
 	@Autowired
 	private BlockCodeUtils blockCodeUtils;
 
+	@Autowired
+	private AccrualInterestDateCalculationService accrualInterestDateCalculationService;
+
 	@Override
 	public Cc1800IPostingInfo process(Cc1800IPostingInfo item)
 	{
@@ -84,16 +86,9 @@ public class Cc1800P23InterestAccrual implements ItemProcessor<Cc1800IPostingInf
 						continue;
 					}
 					
-					LocalDate startDate;
-					if(cactSubAcct.getLastAccrualInterestDate() == null)
-					{
-						startDate = newComputeService.calcSetupDate(cactSubAcct, cactAccount, subAcct);
-					}
-					else
-					{
-						startDate = new LocalDate(cactSubAcct.getLastAccrualInterestDate()).plusDays(1);
-					}
-					
+					LocalDate startDate = accrualInterestDateCalculationService.calcStartDate(
+							cactSubAcct.getLastAccrualInterestDate(), cactSubAcct.getSubAcctType(), cactAccount, subAcct, account);
+
 					// 计提使用的利率表
 					InterestTable accrualTable = newInterestService.calcAccrualInterestTable(cactSubAcct, cactAccount, startDate, batchDate.plusDays(1));
 					
@@ -125,8 +120,7 @@ public class Cc1800P23InterestAccrual implements ItemProcessor<Cc1800IPostingInf
 		Map<AgeGroupCd, SysInternalAcctActionCd> internalMap = null;
 
 		BigDecimal interest;
-		if (interestTable.interestCode.equals(cactSubAcct.getInterestCode()))
-		{
+		if (interestTable.interestCode.equals(cactSubAcct.getInterestCode())) {
 			// 正常计提
 			interest = newInterestService.calcInterest(
 					startDate,
@@ -139,11 +133,11 @@ public class Cc1800P23InterestAccrual implements ItemProcessor<Cc1800IPostingInf
 			sysTxnCd = SysTxnCd.S40;
 			internalMap = InterestSettleListener.accuralMap;
 		}
-		else
-		{
-			//表示计提利率表进行升/降档了，需要重新计算计提并且进行补提/冲减
+		//表示计提利率表进行升或降档了，需要重新计算计提并且进行补提或冲减
+		else {
 			interest = newInterestService.calcInterest(
-					newComputeService.calcSetupDate(cactSubAcct, cactAccount, subAcct),	//取建账日期
+					//取建账日期，此时余额成分必然已经创建
+					new LocalDate(cactSubAcct.getSetupDate()),
 					batchDate.plusDays(1),
 					cactSubAcct.getEndDayBal(),
 					ImmutableList.of(interestTable),
@@ -193,9 +187,11 @@ public class Cc1800P23InterestAccrual implements ItemProcessor<Cc1800IPostingInf
 							batchDate,
 							cactAccount.getAcctSeq().toString(),
 							TxnDetailType.A,
-							newAgeService.calcAgeGroupBySterm( null ) //传入逾期标志
-							);
-				}else{
+							//传入逾期标志
+							newAgeService.calcAgeGroupBySterm( null )
+					);
+				}
+				else{
 					newLedgerService.postLedger(
 							cactAccount.getAcctSeq(),
 							account.sysTxnCdMapping.get(sysTxnCd),
@@ -203,17 +199,17 @@ public class Cc1800P23InterestAccrual implements ItemProcessor<Cc1800IPostingInf
 							batchDate,
 							cactAccount.getAcctSeq().toString(),
 							TxnDetailType.A
-							);
+					);
 				}
 				
 				
 				//利息计提内部账户入账
 				if (account.internalAcctPostMapping != null)
 				{
-					SysInternalAcctActionCd sysInternalAcctActionCd = internalMap.get(TransformType.D.equals(account.carryType)?
-							newAgeService.calcAgeGroupBySterm(null) : //按期结转
-							newAgeService.calcAgeGroupCd(cactAccount.getAgeCd())
-							);
+					//按期结转
+					SysInternalAcctActionCd sysInternalAcctActionCd = internalMap.get(
+							TransformType.D.equals(account.carryType)? newAgeService.calcAgeGroupBySterm(null) : newAgeService.calcAgeGroupCd(cactAccount.getAgeCd())
+					);
 					List<String> internalAcctPostCodes = account.internalAcctPostMapping.get(sysInternalAcctActionCd);
 					if (internalAcctPostCodes != null)
 					{

@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
+import net.engining.pcx.cc.process.service.account.date.AccrualInterestDateCalculationService;
 import org.apache.commons.lang3.time.DateUtils;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
@@ -60,6 +61,9 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 
 	@Autowired
 	private PaymentPlanService paymentPlanService;
+
+	@Autowired
+	private AccrualInterestDateCalculationService accrualInterestDateCalculationService;
 	
 	@Override
 	public Cc1800IPostingInfo process(Cc1800IPostingInfo item)
@@ -87,26 +91,30 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 					{
 						continue;
 					}
-					
 
 					//先确定起息日
-					LocalDate startDate = newComputeService.calcStartDate(cactSubAcct, cactAccount, subAcct, account);
+					LocalDate startDate = accrualInterestDateCalculationService.calcStartDate(
+							cactSubAcct.getLastComputingInterestDate(), cactSubAcct.getSubAcctType(), cactAccount, subAcct, account);
+					//计息截止日
 					LocalDate endDate = batchDate.plusDays(1);
+
 					//准备利率表列表
 					List<InterestTable> tables = newInterestService.retrieveInterestTable(cactAccount, cactSubAcct, account, subAcct, endDate);
 					
 					InterestTable receivableTable = null;
-							
-					if(TransformType.D.equals(account.carryType) 
-							&&  ((PaymentMethod.MRG).equals(account.paymentMethod) || (PaymentMethod.MSF).equals(account.paymentMethod) )
-							){
-						for (InterestTable interestTable : tables)
-						{
+
+					//TODO 结转的逻辑不该在这里
+					boolean flag = TransformType.D.equals(account.carryType)
+							&&  (
+									(PaymentMethod.MRG).equals(account.paymentMethod)
+									|| (PaymentMethod.MSF).equals(account.paymentMethod)
+								);
+					if(flag){
+						for (InterestTable interestTable : tables) {
 							//直接取利率
 							receivableTable=interestTable;
 						}
-						if (receivableTable != null)
-						{
+						if (receivableTable != null) {
 							updateReceivable(cactSubAcct, cactAccount, subAcct,account, receivableTable, startDate);
 						}
 					}
@@ -170,14 +178,16 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 				}
 				break;
 			}
-			case Iterative: //逐笔法
+			//逐笔法
+			case Iterative:
 			{
 				BigDecimal interest = null;
 				BigDecimal interestAmount= BigDecimal.ZERO;
-				
-				if( (PaymentMethod.MRG).equals(account.paymentMethod) ){  //等额本金-剩余靠前特殊固定日还款
-					
-					if(new LocalDate(batchDate.plusDays(1)).equals(new LocalDate(cactAccount.getInterestDate())) ){ //根据下次结息日来控制应收利息
+
+				//等额本金-剩余靠前特殊固定日还款
+				if( (PaymentMethod.MRG).equals(account.paymentMethod) ){
+					//根据下次结息日来控制应收利息
+					if(new LocalDate(batchDate.plusDays(1)).equals(new LocalDate(cactAccount.getInterestDate())) ){
 						// 最后剩余的天数按日息来处理
 						List<RateCalcMethod> dailyRates = newInterestService.convertRates(Interval.D, interestTable);
 						
@@ -188,10 +198,15 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 									.setScale(newComputeService.getReceivableScale(), RoundingMode.HALF_UP)
 								);	// endDate表示闭区间，所以直接是这个days的值
 					}
-				}else if((PaymentMethod.MSF ).equals(account.paymentMethod) ){  //等额本息-剩余靠前特殊固定日还款
-					if(new LocalDate(batchDate.plusDays(1)).equals( new LocalDate(cactAccount.getInterestDate())) ){ //根据下次结息日来控制应收利息
-						if( cactAccount.getCurrentLoanPeriod()==0 ){//首期放款特殊处理
-							List<RateCalcMethod> cycleRates = newInterestService.convertRates(interestTable.cycleBase, interestTable); //转换成月利率
+				}
+				//等额本息-剩余靠前特殊固定日还款
+				else if((PaymentMethod.MSF ).equals(account.paymentMethod) ){
+					//根据下次结息日来控制应收利息
+					if(new LocalDate(batchDate.plusDays(1)).equals( new LocalDate(cactAccount.getInterestDate())) ){
+						//首期放款特殊处理
+						if( cactAccount.getCurrentLoanPeriod()==0 ){
+							//转换成月利率
+							List<RateCalcMethod> cycleRates = newInterestService.convertRates(interestTable.cycleBase, interestTable);
 							
 							interest = interestAmount.add(
 									newComputeService.calcTieredAmount(interestTable.tierInd, cycleRates, cactSubAcct.getEndDayBal(), cactSubAcct.getEndDayBal())
@@ -200,7 +215,8 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 									);	// endDate表示闭区间，所以直接是这个days的值
 							
 							if( startDate.isBefore( new LocalDate(DateUtils.addMonths(cactAccount.getInterestDate(), -1)) )  ){
-								List<RateCalcMethod> dailyRates = newInterestService.convertRates(Interval.D, interestTable);  //转换成日利率
+								//转换成日利率
+								List<RateCalcMethod> dailyRates = newInterestService.convertRates(Interval.D, interestTable);
 								
 								interest=interest.add(
 										newComputeService.calcTieredAmount(interestTable.tierInd, dailyRates, cactSubAcct.getEndDayBal(), cactSubAcct.getEndDayBal())
@@ -209,9 +225,10 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 										);
 							}
 							
-						}else{
-							
-							List<RateCalcMethod> cycleRates = newInterestService.convertRates(interestTable.cycleBase, interestTable); //转换成月利率
+						}
+						else{
+							//转换成月利率
+							List<RateCalcMethod> cycleRates = newInterestService.convertRates(interestTable.cycleBase, interestTable);
 							
 							interest = interestAmount.add(
 									newComputeService.calcTieredAmount(interestTable.tierInd, cycleRates, cactSubAcct.getEndDayBal(), cactSubAcct.getEndDayBal())
@@ -226,7 +243,8 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 					//计算利息的金额基数
 					BigDecimal inteBaseAmount = cactSubAcct.getEndDayBal();
 					//等本等息还款方式任何时候都使用贷款的全额本金计算利息
-					if((account.paymentMethod == PaymentMethod.PSV || account.paymentMethod == PaymentMethod.PSZ) && inteBaseAmount.compareTo(BigDecimal.ZERO) != 0) {
+					boolean flag = (account.paymentMethod == PaymentMethod.PSV || account.paymentMethod == PaymentMethod.PSZ) && inteBaseAmount.compareTo(BigDecimal.ZERO) != 0;
+					if(flag) {
 						inteBaseAmount = cactAccount.getTotalLoanPrincipalAmt();
 					}
 					//等本等息还款日当天生成的LBAL子账户，不计息，因为已在LOAN里计息
@@ -262,13 +280,17 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 									 && interestTable.rateBaseInterval.equals(Interval.Y) && PrePaySettlementType.M.equals(account.advanceType) 
 									 && interest.compareTo(new BigDecimal(0))>0 ){
 								PaymentPlan paymentPlan = paymentPlanService.searchPaymentPlan(cactAccount.getAcctSeq());
-								Date paymentDate=paymentPlan.getDetailsMap().get(paymentPlan.getDetailsMap().size()).getPaymentDate(); //末期还款计划日期
-								if( paymentDate.compareTo(batchDate.toDate() )==0 ){  //末期利息处理,取最后一期利息结转
+								//末期还款计划日期
+								Date paymentDate=paymentPlan.getDetailsMap().get(paymentPlan.getDetailsMap().size()).getPaymentDate();
+								//末期利息处理,取最后一期利息结转
+								if( paymentDate.compareTo(batchDate.toDate() )==0 ){
 									cactSubAcct.setIntReceivable(paymentPlan.getDetailsMap().get(paymentPlan.getDetailsMap().size()).getInterestAmt() );
-								}else{
+								}
+								else{
 									cactSubAcct.setIntReceivable(cactSubAcct.getIntReceivable().add(interest) );
 								}
-							}else if( account.paymentMethod.equals(PaymentMethod.PSV ) && interest.compareTo(new BigDecimal(0))>0 ){
+							}
+							else if( account.paymentMethod.equals(PaymentMethod.PSV ) && interest.compareTo(new BigDecimal(0))>0 ){
 								PaymentPlan paymentPlan = paymentPlanService.searchPaymentPlan(cactAccount.getAcctSeq());
 								for(int i=paymentPlan.getDetailsMap().size() ;i>=1 ; i--){ 
 									Date paymentDate=paymentPlan.getDetailsMap().get(i).getPaymentDate();
@@ -276,7 +298,8 @@ public class Cc1800P22InterestReceivable implements ItemProcessor<Cc1800IPosting
 										cactSubAcct.setIntReceivable(paymentPlan.getDetailsMap().get(i).getInterestAmt() );
 									}
 								}
-							}else{
+							}
+							else{
 								cactSubAcct.setIntReceivable(cactSubAcct.getIntReceivable().add(interest));
 							}
 						}

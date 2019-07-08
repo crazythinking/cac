@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import net.engining.pcx.cc.process.service.support.CommonLogicUtils;
 import org.apache.commons.lang3.SerializationUtils;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
@@ -104,7 +105,7 @@ public class NewInterestService
 	 * B/12  M   B/12    B/84    1/1    1/12
 	 * B     Y   B/1     B/7     12/1    1/1
 	 */
-	private static final int intervalConvertTable[][][] = new int[][][]{
+	private static final int[][][] intervalConvertTable = new int[][][]{
 		new int[][]{new int[]{1,1},  new int[]{1,7},  new int[]{12,0}, new int[]{1,0}},
 		new int[][]{new int[]{7,1},  new int[]{1,1},  new int[]{84,0}, new int[]{7,0}},
 		new int[][]{new int[]{0,12}, new int[]{0,84}, new int[]{1,1},  new int[]{1,12}},
@@ -158,7 +159,8 @@ public class NewInterestService
     public BigDecimal calcInterest(LocalDate startDate, LocalDate endDate, BigDecimal principalAmount, List<InterestTable> interestTables, int scale, InterestCycleRestMethod restMethod, BigDecimal baseAmount)
     {
 		BigDecimal interestAmount = BigDecimal.ZERO;
-		boolean hasProcessed = false;		//记录是否计息成功
+		//记录是否计息成功
+		boolean hasProcessed = false;
 
 		checkArgument(startDate.compareTo(endDate) <= 0, "利息计算的startDate不可大于endDate");
 		checkArgument(!interestTables.isEmpty(), "利息计算的interestTables不可为空");
@@ -169,8 +171,10 @@ public class NewInterestService
 		InterestTable targetTable = fitInterestTable(startDate, endDate, interestTables);
 		if (targetTable != null)	//有一个都靠不了档的情况，这样不计息
 		{
-			Period cyclePeriod = calcCyclePeriod(targetTable);		//靠档的计息周期
-			while (!endDate.isBefore(startDate.plus(cyclePeriod)))	// 结束日期在下一周期起始日期或之后（不在之前），表示当前满足整周期  [startDate, endDate)
+			//靠档的计息周期
+			Period cyclePeriod = calcCyclePeriod(targetTable);
+			// 结束日期在下一周期起始日期或之后（不在之前），表示当前满足整周期  [startDate, endDate)
+			while (!endDate.isBefore(startDate.plus(cyclePeriod)))
 			{
 				hasProcessed = true;
 				// 先转换成计息周期对应的利率
@@ -238,7 +242,8 @@ public class NewInterestService
 		for (RateCalcMethod rcm : interestTable.chargeRates)
 		{
 			RateCalcMethod newRate = new RateCalcMethod();
-			newRate.rate = rcm.rate.multiply(mul).divide(div, 10, RoundingMode.HALF_UP);	//先乘再除
+			//先乘再除
+			newRate.rate = rcm.rate.multiply(mul).divide(div, 10, RoundingMode.HALF_UP);
 			newRate.rateBase = rcm.rateBase;
 			newRate.rateCeil = rcm.rateCeil;
 			result.add(newRate);
@@ -377,21 +382,13 @@ public class NewInterestService
 		PostCode postCode = parameterFacility.getParameter(PostCode.class, postCodeId);
 
 		Date now = new Date();
-		PostDetail detail = new PostDetail();
-		detail.setTxnDate(now);
-		detail.setTxnTime(now);
-		detail.setPostTxnType(PostTxnTypeDef.M);
-		detail.setPostCode(postCode.postCode);
-		detail.setTxnAmt(amount);
-		detail.setPostAmt(amount);
-		detail.setTxnCurrCd(cactAccount.getCurrCd());
-		detail.setPostCurrCd(cactAccount.getCurrCd());
+		PostDetail detail = CommonLogicUtils.setupPostDetail4PostTxnTypeDef(amount, cactAccount, postCode.postCode, now, PostTxnTypeDef.M);
 		detail.setTxnDetailSeq(txnDetailSeq);
 		detail.setTxnDetailType(txnDetailType);
 		
 		newPostService.postToAccount(model, postDate, detail, true, stmtHist);
 	}
-	
+
 	/**
 	 * 按起始/结束日期计算利率表靠档
 	 * @param startDate
@@ -462,7 +459,7 @@ public class NewInterestService
 		
 		if (result != null)
 		{
-			result = (InterestTable)SerializationUtils.clone(result);
+			result = SerializationUtils.clone(result);
 			result.cycleBase = subAcct.interestAccruedMethod;
 			result.cycleBaseMult = 1;
 		}
@@ -492,7 +489,8 @@ public class NewInterestService
 		return tables;
 	}
 
-	public List<InterestTable> retrieveInterestTable(CactAccount cactAccount, CactSubAcct cactSubAcct, Account account, SubAcct subAcct, LocalDate currentDate)
+	public List<InterestTable> retrieveInterestTable(CactAccount cactAccount, CactSubAcct cactSubAcct, Account account,
+													 SubAcct subAcct, LocalDate currentDate)
 	{
 		return retrieveInterestTable(account, subAcct, new LocalDate(cactAccount.getSetupDate()), currentDate);
 	}
@@ -512,7 +510,9 @@ public class NewInterestService
 		return retrieveInterestTable(cactAccount, cactSubAcct, account, subAcct, currentDate);
 	}
 
-	public BigDecimal trialCalculateInterest(int subAcctId, BigDecimal principalAmount, final LocalDate startDate, LocalDate endDate, int scale, boolean compoundInterest, InterestCycleRestMethod restMethod)
+	public BigDecimal trialCalculateInterest(int subAcctId, BigDecimal principalAmount, final LocalDate startDate,
+											 LocalDate endDate, int scale, boolean compoundInterest,
+											 InterestCycleRestMethod restMethod)
 	{
 		CactSubAcct cactSubAcct = em.find(CactSubAcct.class, subAcctId);
 		CactAccount cactAccount = em.find(CactAccount.class, cactSubAcct.getAcctSeq());
@@ -533,7 +533,9 @@ public class NewInterestService
 	 * @param restMethod 最后结息周期不满足时的处理方式
 	 * @return
 	 */
-	public BigDecimal trialCalculateInterest(Account account, SubAcct subAcct, BigDecimal principalAmount, final LocalDate startDate, LocalDate endDate, int scale, boolean compoundInterest, InterestCycleRestMethod restMethod)
+	public BigDecimal trialCalculateInterest(Account account, SubAcct subAcct, BigDecimal principalAmount,
+											 final LocalDate startDate, LocalDate endDate, int scale,
+											 boolean compoundInterest, InterestCycleRestMethod restMethod)
 	{
 		List<InterestTable> tables = retrieveInterestTable(account, subAcct, startDate, endDate);
 		
@@ -557,7 +559,8 @@ public class NewInterestService
 		List<RateCalcMethod> cycleRates = convertRates(maxTable.cycleBase, maxTable);
 		LocalDate currentStartDate = startDate;
 		BigDecimal interestAmount = BigDecimal.ZERO;
-		while (!endDate.isBefore(currentStartDate.plus(cyclePeriod)))	// 结束日期在下一周期起始日期或之后（不在之前），表示当前满足整周期  [startDate, endDate)
+		// 结束日期在下一周期起始日期或之后（不在之前），表示当前满足整周期  [startDate, endDate)
+		while (!endDate.isBefore(currentStartDate.plus(cyclePeriod)))
 		{
 			// 当前周期利息
 			BigDecimal cycleInterest = newComputeService.calcTieredAmount(maxTable.tierInd, cycleRates, principalAmount, principalAmount)
@@ -572,12 +575,14 @@ public class NewInterestService
 			}
 			currentStartDate = currentStartDate.plus(cyclePeriod);
 		}
-		
-		if (startDate.isBefore(endDate))	//如果还有，则继续按正常计算方式计算
+
+		//如果还有，则继续按正常计算方式计算
+		if (startDate.isBefore(endDate))
 		{
 			BigDecimal rest = calcInterest(currentStartDate, endDate, principalAmount, tables, scale, restMethod);
-			if (rest != null)
+			if (rest != null) {
 				interestAmount = interestAmount.add(rest);
+			}
 		}
 		
 		return interestAmount;

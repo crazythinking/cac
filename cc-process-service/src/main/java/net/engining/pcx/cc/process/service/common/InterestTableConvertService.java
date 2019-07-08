@@ -80,7 +80,7 @@ public class InterestTableConvertService {
 	public List<RateCalcMethod> convertRate(InterestTable interest){
 		
 		OrganizationInfo orgInfoParam = parameterCacheFacility.getParameter(OrganizationInfo.class, ParameterFacility.UNIQUE_PARAM_KEY);
-		List<RateCalcMethod> rates = new ArrayList<RateCalcMethod>();
+		List<RateCalcMethod> rates = new ArrayList<>();
 		if(interest.cycleBase == interest.rateBaseInterval){
 			rates = interest.chargeRates;
 		}else{

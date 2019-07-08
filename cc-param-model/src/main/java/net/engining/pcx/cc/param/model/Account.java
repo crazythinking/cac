@@ -1,23 +1,20 @@
 package net.engining.pcx.cc.param.model;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-
 import net.engining.gm.infrastructure.enums.AuthType;
 import net.engining.gm.infrastructure.enums.BusinessType;
 import net.engining.gm.infrastructure.enums.Interval;
 import net.engining.pcx.cc.param.model.enums.*;
 import net.engining.pg.parameter.HasEffectiveDate;
 import net.engining.pg.support.meta.PropertyInfo;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 账户参数
@@ -111,7 +108,7 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
 //  基础参数-结束
     
     
-//	循环信用贷款、消费分期和一次性授信贷款共有的参数-开始
+//	循环信用贷款、消费分期、一次性授信贷款共有的参数-开始
 	/**
 	 * 固定每次还款日
 	 */
@@ -211,20 +208,22 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
     /**
      * 计息头尾规则
      */
-    public ComputInteHT computInteHT;
+    public ComputInte4HeadTail computInte4HeadTail;
     
     /**
      * 按账期冲销顺序类型
      */
     public DepositSortType depositSortType;
+
+	/**
+	 * 分期本金除不尽的部分靠挡方向
+	 */
+	@PropertyInfo(name="分期本金除不尽的部分靠挡方向", length=1)
+	public LeftAmtRemainderMethod loanPrincipalRemainderMethod;
     
-    //分期本金除不尽的部分放在首期收取还是末期收取
-    //@PropertyInfo(name="分期本金余数收取方式", length=2)
-    //public LoanPrincipalRemainderMethod loanPrincipalRemainderMethod;   
+//  循环信用贷款、消费分期、一次性授信贷款共有的参数-结束
     
-//    循环信用贷款和一次性授信贷款共有的参数-结束
-    
-//    循环信用贷款独有参数-开始
+//  循环信用贷款独有参数-开始
     /**
      * 免出账单溢缴款最小金额
      */
@@ -236,9 +235,10 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
      */
     @PropertyInfo(name="免出账单最小借方金额", length=15, precision=2)
     public BigDecimal stmtMinBal;
-//    循环信用贷款独有参数-结束
+
+//  循环信用贷款独有参数-结束
     
-//    消费分期独有参数-开始
+//  消费分期独有参数-开始
     /**
 	 * 分期手续费收取方式
 	 */
@@ -262,17 +262,24 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
 	 */
 	@PropertyInfo(name="贷款手续费比例", length=7, precision=4)
 	public BigDecimal feeRate;
-//    消费分期独有参数-结束
+
+//  消费分期独有参数-结束
     
-//    一次性授信贷款、消费分期、借记活期、借记定期、智能存款共有参数-开始
+//  一次性授信贷款、消费分期、借记活期、借记定期、智能存款共有参数-开始
     /**
      * 结息周期起始日计算方式
      * P-从建账日期作为第一个结息周期的开始日; Y-自然月的1日开始
      */
     @PropertyInfo(name="结息周期起始日类型", length=1)
     public CycleStartDay intSettleStartMethod;
-    
-    /**
+
+	/**
+	 * 起息日延后天数
+	 */
+	@PropertyInfo(name="起息日延后天数", length=1)
+	public Integer postponeDays;
+
+	/**
      * 与结息周期乘数合并，形成结息周期长度
      * 如：6个月，intUnit = M, intUnitMult = 6
      */
@@ -287,13 +294,12 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
     public Integer intUnitMult;
     
     /**
-     * 结息日，与结息周期乘数和单位配合使用。
-     * 99表示当前周期的最后一天。1-29表示当前这个周期的某一天。
-     * 例如：intSettleStartMethod = Y, intUnit = M, intUnitMult = 6, dIntSettleDay = 99
-     *      表示6月30日、12月31日结息
-     * 例如：intSettleStartMethod = P, intUnit = M, intUnitMult = 6, dIntSettleDay = 99
-     *      计息日是2月15日开始，当intSettleStartMethod等于Y的时候dIntSettleDay不起作用，
-     *      表示从2月15日开始，每6个月期结一次息。
+     * 结息日，与结息周期乘数和单位配合使用。<br>
+     * 1-28表示当前这个周期的某一天，其他值不合法；<br>
+     * 例如：intSettleStartMethod = Y, intUnit = M, intUnitMult = 6, dIntSettleDay = 10 <br>
+     *      表示每6个月固定10号结息，即6月10日、12月10日结息 <br>
+     * 例如：intSettleStartMethod = P, intUnit = M, intUnitMult = 6, 当intSettleStartMethod等于P的时候dIntSettleDay不起作用；<br>
+     *      计息日是2月15日开始，表示从2月15日开始，每6个月期结一次息。<br>
      */
     @PropertyInfo(name="结息日", length=2)
     public Integer dIntSettleDay;
@@ -305,18 +311,18 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
     public Integer intSettleFrequency;
     
     /**
-     * 首期天数调整
-     * 结息周期计数单位设置成"日"时，该参数生效
-     * false：首次结息日  = 建账日期 + 结息周期乘数 - 1
-     * true：首次结息日  = 建账日期 + 结息周期乘数
+     * 首期天数调整 <br>
+     * 结息周期计数单位设置成"日"时，该参数生效 <br>
+     * false：首次结息日  = 建账日期 + 结息周期乘数 - 1 <br>
+     * true：首次结息日  = 建账日期 + 结息周期乘数 <br>
      * default : false
      */
     @PropertyInfo(name="首期天数是否调整", length=1)
     public Boolean intFirstPeriodAdj;
-    
-//    一次性授信贷款、借记活期、借记定期、智能存款共有参数-结束
- 
-    // 智能存款使用参数-开始
+
+//  一次性授信贷款、借记活期、借记定期、智能存款共有参数-结束
+
+// 	智能存款使用参数-开始
     /**
      * 智能存款起存金额
      */
@@ -356,7 +362,7 @@ public class Account implements HasEffectiveDate, Serializable, Comparable<Accou
     @PropertyInfo(name="出账单", length=1)
 	public Boolean isStmt;
     
-//     智能存款使用参数-结束
+//  智能存款使用参数-结束
     
     /**
 	 * 利率参数有效类型

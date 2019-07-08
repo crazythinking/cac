@@ -1,15 +1,9 @@
 package net.engining.pcx.cc.param.model.enums;
 
-import net.engining.pg.support.meta.EnumInfo;
-
-@EnumInfo({
-	"YHNT|计头不计尾",
-	"NHYT|不计头计尾",
-	"YHYT|计头计尾",
-	"NHNT|不计头不计尾"
-	
-})
-public enum ComputInteHT {
+/**
+ * 利息计算时标识计头计尾类型
+ */
+public enum ComputInte4HeadTail {
 	/**
 	 * 计头不计尾
 	 */

@@ -1,10 +1,11 @@
-package net.engining.pcx.cc.process.service.account;
+package net.engining.pcx.cc.process.service.account.date;
 
 import net.engining.gm.infrastructure.enums.Interval;
 import net.engining.pcx.cc.infrastructure.shared.model.CactAccount;
 import net.engining.pcx.cc.param.model.Account;
 import net.engining.pcx.cc.param.model.enums.PaymentMethod;
 import net.engining.pcx.cc.process.model.PaymentPlanDetail;
+import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.support.core.exception.ErrorCode;
 import net.engining.pg.support.core.exception.ErrorMessageException;
@@ -31,11 +32,7 @@ import java.util.Date;
  * @create 2019-07-06 11:34
  **/
 @Service
-public class PaymentDateCalculationService {
-    /**
-     * 固定日最大值
-     */
-    public static final int MAX_FIXDAY = 31;
+public class PaymentDateCalculationService implements PaymentDateCalculationServiceInter {
 
     @Autowired
     Provider7x24 provider7x24;
@@ -47,6 +44,7 @@ public class PaymentDateCalculationService {
      * 获取下一期的还款日
      *
      */
+    @Override
     public Date getNextPaymentDay(CactAccount cactAccount) {
         // 获取账户参数
         Account account = newComputeService.retrieveAccount(cactAccount);
@@ -71,6 +69,7 @@ public class PaymentDateCalculationService {
      * @param detail            还款计划明细对象
      * @return
      */
+    @Override
     public PaymentPlanDetail setupPaymentNatureDate(Interval interval, Boolean intFirstPeriodAdj, PaymentMethod paymentMethod,
                                                     Date startDate, Integer mult, int pmtDueDays, int i, PaymentPlanDetail detail) {
         return setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, startDate, 0, mult, pmtDueDays, i, detail);
@@ -90,6 +89,7 @@ public class PaymentDateCalculationService {
      * @param detail            还款计划明细对象
      * @return
      */
+    @Override
     public PaymentPlanDetail setupPaymentNatureDate(Interval interval, Boolean intFirstPeriodAdj, PaymentMethod paymentMethod,
                                                     Date startDate, int fixedDay, Integer mult, int pmtDueDays, int i, PaymentPlanDetail detail) {
         Date date = caculatePaymentDate(interval, intFirstPeriodAdj, paymentMethod, startDate, true, fixedDay, mult, pmtDueDays, i);
@@ -110,6 +110,7 @@ public class PaymentDateCalculationService {
      * @param detail            还款计划明细对象
      * @return
      */
+    @Override
     public PaymentPlanDetail setupPaymentDate(Interval interval, Boolean intFirstPeriodAdj, PaymentMethod paymentMethod,
                                               Date postDate, Integer mult, int pmtDueDays, int i, PaymentPlanDetail detail) {
         return setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, 0, mult, pmtDueDays, i, detail);
@@ -129,6 +130,7 @@ public class PaymentDateCalculationService {
      * @param detail            还款计划明细对象
      * @return
      */
+    @Override
     public PaymentPlanDetail setupPaymentDate(Interval interval, Boolean intFirstPeriodAdj, PaymentMethod paymentMethod,
                                               Date postDate, int fixedDay, Integer mult, int pmtDueDays, int i, PaymentPlanDetail detail) {
         Date date = caculatePaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, true, fixedDay, mult, pmtDueDays, i);
@@ -143,6 +145,7 @@ public class PaymentDateCalculationService {
      * @param interval
      * @return n days or n week or n month or n year
      */
+    @Override
     public int getOffset4BizDate2NatureDate(LocalDate bizDate, Interval interval) {
         int offset = 0;
         Period period = null;
@@ -260,7 +263,7 @@ public class PaymentDateCalculationService {
         return date;
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         PaymentDateCalculationService paymentDateCalculationService = new PaymentDateCalculationService();
         //放款日大于固定日
         Date date = paymentDateCalculationService.caculate4FixedPaymentDate(2, new Date(), 1, 0);
@@ -280,6 +283,16 @@ public class PaymentDateCalculationService {
     }
 
     /**
+     * java.time.LocalDate --> java.util.Date
+     */
+    private static Date localDateToDate(java.time.LocalDate localDate) {
+        ZoneId zone = ZoneId.systemDefault();
+        Instant instant = localDate.atStartOfDay().atZone(zone).toInstant();
+        Date date = Date.from(instant);
+        return date;
+    }
+
+    /**
      * java.util.Date --> java.time.LocalDate
      */
     private static java.time.LocalDate dateToLocalDate(java.util.Date date) {
@@ -294,16 +307,6 @@ public class PaymentDateCalculationService {
             return localDate;
         }
 
-    }
-
-    /**
-     * java.time.LocalDate --> java.util.Date
-     */
-    public static Date localDateToDate(java.time.LocalDate localDate) {
-        ZoneId zone = ZoneId.systemDefault();
-        Instant instant = localDate.atStartOfDay().atZone(zone).toInstant();
-        java.util.Date date = Date.from(instant);
-        return date;
     }
 
 }

@@ -51,9 +51,9 @@ public interface PaymentPlanService {
 	 *            到期还款天数
 	 * @return
 	 */
-	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
-			BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
-			BigDecimal feeAmount, BigDecimal feeRate, Date postDate, int pmtDueDays);
+	PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
+							   BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
+							   BigDecimal feeAmount, BigDecimal feeRate, Date postDate, int pmtDueDays);
 	
 	/**
 	 * 生成还款计划
@@ -88,9 +88,9 @@ public interface PaymentPlanService {
 	 *            固定还款日
 	 * @return
 	 */
-	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
-			BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
-			BigDecimal feeAmount, BigDecimal feeRate, Date postDate, Boolean intFirstPeriodAdj, int fixedPmtDay);
+	PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
+							   BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
+							   BigDecimal feeAmount, BigDecimal feeRate, Date postDate, Boolean intFirstPeriodAdj, int fixedPmtDay);
 
 	/**
 	 * 生成还款计划
@@ -127,9 +127,9 @@ public interface PaymentPlanService {
 	 *            固定还款日
 	 * @return
 	 */
-	public PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
-			BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
-			BigDecimal feeAmount, BigDecimal feeRate, Date postDate, int pmtDueDays, Boolean intFirstPeriodAdj, int fixedPmtDay);
+	PaymentPlan regPaymentPlan(Date loanStartDate, Integer totalPeriod, Interval interval, Integer mult, PaymentMethod paymentMethod,
+							   BigDecimal loanAmount, InterestTable it, LoanFeeMethod loanFeeMethod, CalcMethod loanFeeCalcMethod,
+							   BigDecimal feeAmount, BigDecimal feeRate, Date postDate, int pmtDueDays, Boolean intFirstPeriodAdj, int fixedPmtDay);
 	
 	
 	/**
@@ -146,7 +146,7 @@ public interface PaymentPlanService {
 	 * @param saveDate
 	 *            保存日期
 	 */
-	public void savePaymentPlan(Integer acctSeq, String custId, String acctParamId, PaymentPlan plan, Date saveDate);
+	void savePaymentPlan(Integer acctSeq, String custId, String acctParamId, PaymentPlan plan, Date saveDate);
 
 	/**
 	 * 更新还款计划
@@ -162,23 +162,15 @@ public interface PaymentPlanService {
 	 * @param saveDate
 	 *            保存日期
 	 */
-	public void updatePaymentPlan(Integer acctSeq, String custId, String acctParamId, PaymentPlan plan, Date saveDate);
+	void updatePaymentPlan(Integer acctSeq, String custId, String acctParamId, PaymentPlan plan, Date saveDate);
 
-	/**
-	 * 获取还款计划表
-	 * 
-	 * @param acctSeq
-	 *            账户编号
-	 * @return
-	 */
-	public PaymentPlan findLatestPaymentPlan(Integer acctSeq);
 
 	/**
 	 * 实时查询还款计划
 	 * 
 	 * @param acctSeq
 	 */
-	public PaymentPlan searchPaymentPlan(Integer acctSeq);
+	PaymentPlan searchPaymentPlan(Integer acctSeq);
 
 //	/**
 //	 * 增加入参acctSeq，目的是为了判断第一次放款的贷款还是后面的贷款
@@ -236,5 +228,5 @@ public interface PaymentPlanService {
 	 * @param acctParam
 	 * @return
 	 */
-	public PaymentPlan reCreatePaymentPlan(PaymentPlan paymentPlan, CactAccount cactAccount, Account acctParam);
+	PaymentPlan reCreatePaymentPlan(PaymentPlan paymentPlan, CactAccount cactAccount, Account acctParam);
 }

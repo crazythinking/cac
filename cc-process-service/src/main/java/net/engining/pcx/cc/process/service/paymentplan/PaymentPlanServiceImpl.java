@@ -1,4 +1,4 @@
-package net.engining.pcx.cc.process.service.impl;
+package net.engining.pcx.cc.process.service.paymentplan;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import net.engining.gm.infrastructure.enums.Interval;
@@ -12,11 +12,12 @@ import net.engining.pcx.cc.param.model.enums.PrePaySettlementType;
 import net.engining.pcx.cc.process.model.PaymentPlan;
 import net.engining.pcx.cc.process.model.PaymentPlanDetail;
 import net.engining.pcx.cc.process.service.PaymentPlanService;
-import net.engining.pcx.cc.process.service.account.PaymentDateCalculationService;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.account.NewInterestService;
 import net.engining.pcx.cc.process.service.account.NewPaymentPlanCalcService;
 import net.engining.pcx.cc.process.service.account.NewPaymentPlanCalcService.TempPaymentPlanDetailExt;
+import net.engining.pcx.cc.process.service.account.date.AccrualInterestDateCalculationService;
+import net.engining.pcx.cc.process.service.account.date.PaymentDateCalculationServiceInter;
 import net.engining.pcx.cc.process.service.common.InterestTableConvertService;
 import net.engining.pcx.cc.process.service.support.Provider7x24;
 import net.engining.pg.parameter.ParameterFacility;
@@ -34,6 +35,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
+/**
+ *
+ * @author Eric Lu
+ */
 public class PaymentPlanServiceImpl implements PaymentPlanService {
 
 	/**
@@ -63,7 +68,13 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 	private NewPaymentPlanCalcService newPaymentPlanCalcService;
 
 	@Autowired
-	private PaymentDateCalculationService dateCaculation4LoanService;
+	private PaymentDateCalculationServiceInter paymentDateCalculationServiceInter;
+
+	@Autowired
+	private AccrualInterestDateCalculationService accrualInterestDateCalculationService;
+
+	@Autowired
+	private PaymentPlanHelperService paymentPlanHelperService;
 	
 	private QCactLoanPaymentPlan qLoanPaymentPlan = QCactLoanPaymentPlan.cactLoanPaymentPlan;
 
@@ -91,7 +102,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			int pmtDueDays, Boolean intFirstPeriodAdj, int fixedPmtDay) {
 
 		// 涉及到参数的修改，所以在此做深复制操作
-		InterestTable interestParam = (InterestTable) SerializationUtils.clone(it);
+		InterestTable interestParam = SerializationUtils.clone(it);
 		PaymentPlan paymentPlan = new PaymentPlan();
 		paymentPlan.setCreateDate(postDate);
 		paymentPlan.setPostDate(postDate);
@@ -101,8 +112,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		paymentPlan.setLeftLoanPeriod(totalPeriod);
 		paymentPlan.setLeftLoanPrincipalAmt(loanAmount);
 
-		OrganizationInfo org = null;
-
+		OrganizationInfo org;
 		// 统一设置paymentPlan的年化利率
 		switch (it.rateBaseInterval) {
 			case D:
@@ -121,52 +131,34 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				paymentPlan.setYearRate(it.chargeRates.get(0).rate);
 		}
 
-		List<PaymentPlanDetail> details = new ArrayList<PaymentPlanDetail>();
-		Map<Integer, PaymentPlanDetail> detailsMap = new HashMap<Integer, PaymentPlanDetail>();
-		TempPaymentPlanDetailExt tempPaymentPlanDetailExt = null;
+		List<PaymentPlanDetail> details = new ArrayList<>(totalPeriod);
+		Map<Integer, PaymentPlanDetail> detailsMap = new HashMap<>(totalPeriod);
+		TempPaymentPlanDetailExt tempPaymentPlanDetailExt;
 		BigDecimal totalBal = loanAmount;
 		BigDecimal leftBal = loanAmount;
 		for (int i = 0; i < totalPeriod; i++) {
 			PaymentPlanDetail detail = new PaymentPlanDetail();
 			detail.setLoanPeriod(i + 1);
 
-			// 计算应收费用；不再cc内计算费用，费用计算将由专门模块代替；
-			// detail.setFeeAmt(BigDecimal.ZERO);
-			// if (loanFeeMethod == LoanFeeMethod.E){
-			// if (loanFeeCalcMethod == CalcMethod.A){
-			// detail.setFeeAmt(feeAmount);
-			// }
-			// else{
-			// detail.setFeeAmt(totalBal.multiply(feeRate).setScale(2,BigDecimal.ROUND_HALF_UP));
-			// }
-			// }
-			// else if (i == 0){
-			// if (loanFeeCalcMethod == CalcMethod.A){
-			// detail.setFeeAmt(feeAmount);
-			// }
-			// else{
-			// detail.setFeeAmt(totalBal.multiply(feeRate));
-			// }
-			// }
-
-			// 计算还款日, 还款固定日为0或大于31(月内最大值)时，均表示非固定日还款
-			if (fixedPmtDay != 0 || fixedPmtDay > 31) {
-				// 确定fixedDate
-				detail = dateCaculation4LoanService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedPmtDay, mult, 0, i, detail);
-				detail = dateCaculation4LoanService.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, fixedPmtDay, mult, 0, i, detail);
+			// 计算还款日, 还款固定日为(0,31]之间时，为固定日还款，其他非法值忽略
+			if (fixedPmtDay > 0 && fixedPmtDay <= 31) {
+				// 确定fixedDate，固定日还款不可能存在延迟还款日，故直接传0
+				detail = paymentDateCalculationServiceInter.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, fixedPmtDay, mult, 0, i, detail);
+				detail = paymentDateCalculationServiceInter.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, fixedPmtDay, mult, 0, i, detail);
 				
 			}
 			else {
-				detail = dateCaculation4LoanService.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, mult, pmtDueDays, i, detail);
-				detail = dateCaculation4LoanService.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, mult, pmtDueDays, i, detail);
+				detail = paymentDateCalculationServiceInter.setupPaymentDate(interval, intFirstPeriodAdj, paymentMethod, postDate, mult, pmtDueDays, i, detail);
+				detail = paymentDateCalculationServiceInter.setupPaymentNatureDate(interval, intFirstPeriodAdj, paymentMethod, loanStartDate, mult, pmtDueDays, i, detail);
 			}
 
 			// 计算应收利息
 			// 根据利率参数的计息单位转换为日利率/月利率/年利率
 			List<RateCalcMethod> calcRates = interestTableConvertUtils.convertRate(interestParam);
-			LocalDate lastPaymentDate = new LocalDate(i == 0 ? postDate : details.get(i - 1).getPaymentDate());
+			//每期所对应的还款时间
+			LocalDate paymentDate = new LocalDate(i == 0 ? postDate : details.get(i - 1).getPaymentDate());
 			detail = newPaymentPlanCalcService.setupInterestAmt(interval, totalPeriod, paymentMethod, interestParam, i, postDate, mult, calcRates, leftBal,
-					loanAmount, detail, lastPaymentDate.toDate());
+					loanAmount, detail, paymentDate.toDate());
 
 			// 计算本金
 			tempPaymentPlanDetailExt = newPaymentPlanCalcService.setupPrincipalBal(paymentMethod, totalPeriod, i, leftBal, totalBal, mult, calcRates, detail);
@@ -176,12 +168,10 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			// setup 原始计划金额
 			detail.setOrigPrincipalBal(detail.getPrincipalBal());
 			detail.setOrigInterestAmt(detail.getInterestAmt());
-			// detail.setOrigFeeAmt(detail.getFeeAmt());
 
-			detail.getAcctTypeAndAmtMap().put("INTE", detail.getInterestAmt());
-			detail.getAcctTypeAndAmtMap().put("LBAL", detail.getPrincipalBal());
-			// detail.getAcctTypeAndAmtMap().put("SFEE", detail.getFeeAmt());
-			detail.getAcctTypeAndAmtMap().put("PNIT", detail.getPenalizedAmt());
+			detail.getAcctTypeAndAmtMap().put(SubAcctType.DefaultSubAcctType.INTE.toString(), detail.getInterestAmt());
+			detail.getAcctTypeAndAmtMap().put(SubAcctType.DefaultSubAcctType.LBAL.toString(), detail.getPrincipalBal());
+			detail.getAcctTypeAndAmtMap().put(SubAcctType.DefaultSubAcctType.PNIT.toString(), detail.getPenalizedAmt());
 			details.add(detail);
 			detailsMap.put(detail.getLoanPeriod(), detail);
 		}
@@ -194,18 +184,22 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 	public BigDecimal getCalculateInte(CactAccount cactAccount) {
 		Account account = newComputeService.retrieveAccount(cactAccount);
 		BigDecimal intAmt = new BigDecimal(0);
+		// 说明最后一期已经结转出来,无需试算
 		if (cactAccount.getCurrentLoanPeriod() >= cactAccount.getTotalLoanPeriod()) {
-			return intAmt; // 说明最后一期已经结转出来,无需试算
+			return intAmt;
 		}
 		// 余额成分提前结出来的情况
-		Integer period = cactAccount.getCurrentLoanPeriod() + 1; // 结转以后的期次
+		// 结转以后的期次
+		Integer period = cactAccount.getCurrentLoanPeriod() + 1;
 		boolean flag = false;
+		// 还款日期为到期日时，按到期日当天的利息做计算
 		if (PrePaySettlementType.D.equals(account.advanceType) && provider7x24.getCurrentDate().compareTo(new LocalDate(cactAccount.getInterestDate())) == 0) {
-			flag = true;// 还款日期为到期日时，按到期日当天的利息做计算
+			flag = true;
 		}
 
-		if (PrePaySettlementType.M.equals(account.advanceType) || flag) { // 提前还款参数为收取按月利息
-			PaymentPlan paymentPlan = getPaymentPlan(cactAccount.getAcctSeq());
+		// 提前还款参数为收取按月利息
+		if (PrePaySettlementType.M.equals(account.advanceType) || flag) {
+			PaymentPlan paymentPlan = paymentPlanHelperService.getPaymentPlan(cactAccount.getAcctSeq());
 			if (paymentPlan == null) {
 				return null;
 			}
@@ -213,20 +207,13 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			intAmt = paymentPlanDetail.getInterestAmt();
 		}
 		else {
-			QCactSubAcct qCactSubAcct = QCactSubAcct.cactSubAcct;
-			List<CactSubAcct> subAccts = new JPAQueryFactory(em).select(qCactSubAcct).from(qCactSubAcct)
-					.where(qCactSubAcct.acctSeq.eq(cactAccount.getAcctSeq())).fetch();
-			CactSubAcct loanSubAcct = null;
-			for (CactSubAcct cactSubAcct : subAccts) {
-				if (cactSubAcct.getSubAcctType().equals("LOAN")) {
-					loanSubAcct = cactSubAcct;
-				}
-			}
-			SubAcct subAcctParam = newComputeService.retrieveSubAcct(account.subAcctParam.get("LOAN"), cactAccount);
+			CactSubAcct loanSubAcct = newComputeService.getCactSubAcct4Loan(cactAccount.getAcctSeq().intValue());
+			SubAcct subAcctParam = newComputeService.retrieveSubAcct(account.subAcctParam.get(SubAcctType.DefaultSubAcctType.LOAN), cactAccount);
 			InterestTable interest = newComputeService.retrieveInterestTable(subAcctParam.intTables.get(0), cactAccount);
-			List<RateCalcMethod> calcRates = new ArrayList<RateCalcMethod>();
+			List<RateCalcMethod> calcRates = new ArrayList<>();
 			OrganizationInfo orgInfoParam = parameterCacheFacility.getParameter(OrganizationInfo.class, ParameterFacility.UNIQUE_PARAM_KEY);
-			if (interest.rateBaseInterval == Interval.W) { // 日利率转换
+			// 日利率转换
+			if (interest.rateBaseInterval == Interval.W) {
 				calcRates = newComputeService.getRates(interest, 1, 7);
 			}
 			else if (interest.rateBaseInterval == Interval.M) {
@@ -244,7 +231,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		}
 		return intAmt;
 	}
-	
+
 	/**
 	 * 判断是否需要持久化还款计划
 	 * @param acctSeq
@@ -275,13 +262,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			paymentPlan.setCustId(custId);
 			paymentPlan.setAcctParamId(acctParamId);
 			paymentPlan.setPaymentMethod(plan.getPaymentMethod());
-			paymentPlan.setTotalLoanPeriod(plan.getTotalLoanPeriod());
-			paymentPlan.setTotalLoanPrincipalAmt(plan.getTotalLoanPrincipalAmt());
-			paymentPlan.setYearRate(plan.getYearRate());
-			paymentPlan.setLeftLoanPeriod(plan.getLeftLoanPeriod());
-			paymentPlan.setLeftLoanPrincipalAmt(plan.getLeftLoanPrincipalAmt());
-			paymentPlan.setPostDate(plan.getPostDate());
-			paymentPlan.setBizDate(provider7x24.getCurrentDate().toDate());
+			setupCactLoanPaymentPlanCommonField(plan, paymentPlan);
 			paymentPlan.fillDefaultValues();
 			em.persist(paymentPlan);
 
@@ -289,7 +270,6 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			for (PaymentPlanDetail detail : plan.getDetails()) {
 				CactLoanPaymentDetail paymentDetail = new CactLoanPaymentDetail();
 				paymentDetail.setAcctSeq(acctSeq);
-				// paymentDetail.setFeeAmt(detail.getFeeAmt());
 				paymentDetail.setInterestAmt(detail.getInterestAmt());
 				paymentDetail.setLoanPeriod(detail.getLoanPeriod());
 				paymentDetail.setPaymentDate(detail.getPaymentDate());
@@ -312,13 +292,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				.where(qLoanPaymentPlan.acctSeq.eq(acctSeq)).fetchOne();
 		
 		if (loanPlan != null && isDiffPaymentPlan(plan, loanPlan)) {
-			loanPlan.setTotalLoanPeriod(plan.getTotalLoanPeriod());
-			loanPlan.setTotalLoanPrincipalAmt(plan.getTotalLoanPrincipalAmt());
-			loanPlan.setYearRate(plan.getYearRate());
-			loanPlan.setLeftLoanPeriod(plan.getLeftLoanPeriod());
-			loanPlan.setLeftLoanPrincipalAmt(plan.getLeftLoanPrincipalAmt());
-			loanPlan.setPostDate(plan.getPostDate());
-			loanPlan.setBizDate(provider7x24.getCurrentDate().toDate());
+			setupCactLoanPaymentPlanCommonField(plan, loanPlan);
 			loanPlan.setLastUpdateDate(new Date());
 			
 			List<CactLoanPaymentDetail> cactloanpaymentdetail = new JPAQueryFactory(em)
@@ -328,8 +302,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			if (cactloanpaymentdetail != null && !cactloanpaymentdetail.isEmpty()) {
 				for (PaymentPlanDetail detail : plan.getDetails()) {
 					for (CactLoanPaymentDetail loanDetail : cactloanpaymentdetail) {
-						if (loanDetail.getLoanPeriod() == detail.getLoanPeriod() && isDiffPaymentPlanDetail(detail, loanDetail)) {
-							// loanDetail.setFeeAmt(detail.getFeeAmt());
+						if (loanDetail.getLoanPeriod().equals(detail.getLoanPeriod()) && isDiffPaymentPlanDetail(detail, loanDetail)) {
 							loanDetail.setInterestAmt(detail.getInterestAmt());
 							loanDetail.setPaymentDate(detail.getPaymentDate());
 							loanDetail.setPaymentNatureDate(detail.getPaymentNatureDate());
@@ -343,7 +316,17 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		}
 
 	}
-	
+
+	private void setupCactLoanPaymentPlanCommonField(PaymentPlan plan, CactLoanPaymentPlan loanPlan) {
+		loanPlan.setTotalLoanPeriod(plan.getTotalLoanPeriod());
+		loanPlan.setTotalLoanPrincipalAmt(plan.getTotalLoanPrincipalAmt());
+		loanPlan.setYearRate(plan.getYearRate());
+		loanPlan.setLeftLoanPeriod(plan.getLeftLoanPeriod());
+		loanPlan.setLeftLoanPrincipalAmt(plan.getLeftLoanPrincipalAmt());
+		loanPlan.setPostDate(plan.getPostDate());
+		loanPlan.setBizDate(provider7x24.getCurrentDate().toDate());
+	}
+
 	/**
 	 * 比较持久化的还款主计划，与修正后的还款主计划
 	 * @param plan
@@ -391,195 +374,17 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		
 	}
 
-	@Override
-	public PaymentPlan findLatestPaymentPlan(Integer acctSeq) {
-		CactLoanPaymentPlan cactPlan = new JPAQueryFactory(em).select(qLoanPaymentPlan).from(qLoanPaymentPlan).where(qLoanPaymentPlan.acctSeq.eq(acctSeq)).orderBy(qLoanPaymentPlan.planSeq.desc()).fetchFirst();
-		if (cactPlan != null) {
-			PaymentPlan plan = new PaymentPlan();
-			plan.setCreateDate(cactPlan.getSetupDate());
-			plan.setLeftLoanPeriod(cactPlan.getLeftLoanPeriod());
-			plan.setLeftLoanPrincipalAmt(cactPlan.getLeftLoanPrincipalAmt());
-			plan.setPaymentMethod(cactPlan.getPaymentMethod());
-			plan.setPostDate(cactPlan.getPostDate());
-			plan.setTotalLoanPeriod(cactPlan.getTotalLoanPeriod());
-			plan.setTotalLoanPrincipalAmt(cactPlan.getTotalLoanPrincipalAmt());
-			plan.setYearRate(cactPlan.getYearRate());
-
-			QCactLoanPaymentDetail qLoanPaymentDetail = QCactLoanPaymentDetail.cactLoanPaymentDetail;
-			List<CactLoanPaymentDetail> detailList = new JPAQueryFactory(em)
-					.select(qLoanPaymentDetail)
-					.from(qLoanPaymentDetail)
-					.where(
-							qLoanPaymentDetail.planSeq.eq(cactPlan.getPlanSeq()))
-					.orderBy(qLoanPaymentDetail.paymentDate.asc())
-					.fetch();
-			List<PaymentPlanDetail> details = new ArrayList<PaymentPlanDetail>();
-			for (CactLoanPaymentDetail item : detailList) {
-				PaymentPlanDetail detail = new PaymentPlanDetail();
-				// detail.setFeeAmt(item.getFeeAmt());
-				detail.setInterestAmt(item.getInterestAmt());
-				detail.setLoanPeriod(item.getLoanPeriod());
-				detail.setPaymentDate(item.getPaymentDate());
-				detail.setPaymentNatureDate(item.getPaymentNatureDate());
-				detail.setPrincipalBal(item.getPrincipalBal());
-				details.add(detail);
-			}
-			plan.setDetails(details);
-			return plan;
-		}
-		return null;
-	}
-
 	private void updatePaymentPlanDetail(String subAcctType, BigDecimal subAmt, PaymentPlanDetail paymentPlanDetail) {
 
-		if (subAcctType.equals("INTE")) {
+		if (SubAcctType.DefaultSubAcctType.INTE.equals(subAcctType)) {
 			paymentPlanDetail.setInterestAmt(subAmt);
 		}
-		else if (subAcctType.equals("LBAL")) {
+		else if (SubAcctType.DefaultSubAcctType.LBAL.equals(subAcctType)) {
 			paymentPlanDetail.setPrincipalBal(subAmt);
 		}
-		// else if(subAcctType.equals("SFEE")){
-		// paymentPlanDetail.setFeeAmt(subAmt);
-		// }
-		else if (subAcctType.equals("PNIT")) {
+		else if (SubAcctType.DefaultSubAcctType.PNIT.equals(subAcctType)) {
 			paymentPlanDetail.setPenalizedAmt(subAmt);
 		}
-	}
-
-	/**
-	 * 计算利息开始日，以上次计息日+1天为开始
-	 * 
-	 * @param cactSubAcct
-	 * @param cactAccount
-	 * @param subAcct
-	 * @param account
-	 * @return
-	 */
-	private LocalDate calcStartDate(CactSubAcct cactSubAcct, CactAccount cactAccount, SubAcct subAcct, Account account) {
-		LocalDate startDate;
-		if (cactSubAcct.getLastComputingInterestDate() == null) {
-			// 第一次计息
-			startDate = calcSetupDate(cactSubAcct, cactAccount, subAcct);
-			// LBAL子账户修利息的时候只修当天就可以了，setUpDate的时候不用计息,导致lastComputingInterestDate是null
-			if ("LBAL".equals(cactSubAcct.getSubAcctType())) {
-				startDate = startDate.plusDays(1);
-			}
-		}
-		else {
-			startDate = new LocalDate(cactSubAcct.getLastComputingInterestDate()).plusDays(1);
-		}
-		return startDate;
-	}
-
-	/**
-	 * 计算利息截止日，
-	 * 
-	 * @param cactAccount
-	 * @param cactSubAcct
-	 * @param paymentPlan
-	 * @param endDate
-	 * @param tables
-	 * @return
-	 */
-	private LocalDate calcEndDate(CactAccount cactAccount, CactSubAcct cactSubAcct, PaymentPlan paymentPlan, LocalDate endDate, List<InterestTable> tables) {
-		// 当前业务日期是否最后一期到期日
-		PaymentPlanDetail lastDetail = paymentPlan.getDetailsMap().get(paymentPlan.getTotalLoanPeriod());
-		LocalDate curDate = provider7x24.getCurrentDate();
-		boolean lastDay = false;
-		if (lastDetail.getPaymentDate().compareTo(curDate.toDate()) == 0) {
-			lastDay = true;
-		}
-
-		// 如果当前期数在最后一期之前，还款日当天的利息在还款日当天收掉(因为到期日当天还款，日终批量还是会在当期计一天利息)，最后一期中还款的话当日就不收利息。
-		// 总体原则是当天放款当天收息，当天还款就不收息。
-		if (
-		/**
-		 * 这一段可以去掉 //cactAccount.getTotalLoanPeriod() > 1 && //如果只有一期，跑N天收N-1天利息
-		 * //业务日当天预修的利息应该每一期都要修 //cactAccount.getCurrentLoanPeriod() + 1 <
-		 * paymentPlan.getTotalLoanPeriod() &&
-		 **/
-		// 这段逻辑依赖于批量顺序，本金先计息，再结息的情况下，LOAN类型子账户从创建日起每日计息；LBAL类型子账户创建日不计息，之后每天计息；
-		// 因此算头不算尾时，LOAN不需要（在未跑批的情况下）预修当前业务日所属的利息；但LBAL则需要
-
-		(cactSubAcct.getSubAcctType().equals("LBAL") || (cactSubAcct.getSubAcctType().equals("LOAN") && !lastDay))
-				&& tables.get(0).cycleBase == Interval.D && tables.get(0).cycleBaseMult == 1) {
-			endDate = endDate.plusDays(1);
-		}
-		return endDate;
-	}
-
-	/**
-	 * 计算账户余额成分（SubAcct）建立日期
-	 * 
-	 * @param cactSubAcct
-	 * @param cactAccount
-	 * @param subAcct
-	 * @return
-	 */
-	private LocalDate calcSetupDate(CactSubAcct cactSubAcct, CactAccount cactAccount, SubAcct subAcct) {
-		LocalDate setupDate;
-		switch (subAcct.intAccumFrom) {
-			case C:
-				// 取上一账单日。这类余额肯定存在上一账单日数据
-				setupDate = new LocalDate(cactAccount.getLastInterestDate()).plusDays(subAcct.postponeDays);
-				break;
-			case P:
-				// 取子账户建立日期
-				setupDate = new LocalDate(cactSubAcct.getSetupDate()).plusDays(subAcct.postponeDays);
-				break;
-			default:
-				throw new IllegalArgumentException("should not be here");
-		}
-		return setupDate;
-	}
-
-	/**
-	 * 获取cc完整的静态的还款计划及其明细
-	 * 
-	 * @param acctSeq
-	 * @return
-	 */
-	private PaymentPlan getPaymentPlan(Integer acctSeq) {
-		PaymentPlan paymentPlan = new PaymentPlan();
-		CactLoanPaymentPlan cactLoanPaymentPlan = new JPAQueryFactory(em).select(qLoanPaymentPlan).from(qLoanPaymentPlan).where(qLoanPaymentPlan.acctSeq.eq(acctSeq)).fetchOne();
-		if (cactLoanPaymentPlan != null) {
-			paymentPlan.setAcctSeq(cactLoanPaymentPlan.getAcctSeq());
-			paymentPlan.setProdAcctParamId(cactLoanPaymentPlan.getAcctParamId());
-			paymentPlan.setPaymentMethod(cactLoanPaymentPlan.getPaymentMethod());
-			paymentPlan.setCreateDate(cactLoanPaymentPlan.getSetupDate());
-			paymentPlan.setTotalLoanPeriod(cactLoanPaymentPlan.getTotalLoanPeriod());
-			paymentPlan.setTotalLoanPrincipalAmt(cactLoanPaymentPlan.getTotalLoanPrincipalAmt());
-			paymentPlan.setYearRate(cactLoanPaymentPlan.getYearRate());
-			paymentPlan.setLeftLoanPeriod(cactLoanPaymentPlan.getLeftLoanPeriod());
-			paymentPlan.setLeftLoanPrincipalAmt(cactLoanPaymentPlan.getLeftLoanPrincipalAmt());
-			paymentPlan.setPostDate(cactLoanPaymentPlan.getPostDate());
-		}
-		else {
-			return null;
-		}
-
-		List<CactLoanPaymentDetail> cactLoanPaymentDetails = new JPAQueryFactory(em)
-				.select(qLoanPaymentDetail)
-				.from(qLoanPaymentDetail)
-				.where(qLoanPaymentDetail.planSeq.eq(cactLoanPaymentPlan.getPlanSeq())).fetch();
-		if (cactLoanPaymentDetails != null) {
-			List<PaymentPlanDetail> details = new ArrayList<PaymentPlanDetail>();
-			Map<Integer, PaymentPlanDetail> detailsMap = new HashMap<Integer, PaymentPlanDetail>();
-			for (CactLoanPaymentDetail cactLoanPaymentDetail : cactLoanPaymentDetails) {
-				PaymentPlanDetail paymentPlanDetail = new PaymentPlanDetail();
-				paymentPlanDetail.setLoanPeriod(cactLoanPaymentDetail.getLoanPeriod());
-				paymentPlanDetail.setPaymentDate(cactLoanPaymentDetail.getPaymentDate());
-				paymentPlanDetail.setPaymentNatureDate(cactLoanPaymentDetail.getPaymentNatureDate());
-				paymentPlanDetail.setFeeAmt(cactLoanPaymentDetail.getFeeAmt());
-				paymentPlanDetail.setInterestAmt(cactLoanPaymentDetail.getInterestAmt());
-				paymentPlanDetail.setPrincipalBal(cactLoanPaymentDetail.getPrincipalBal());
-				details.add(paymentPlanDetail);
-				detailsMap.put(paymentPlanDetail.getLoanPeriod(), paymentPlanDetail);
-			}
-			paymentPlan.setDetails(details);
-			paymentPlan.setDetailsMap(detailsMap);
-		}
-		return paymentPlan;
 	}
 
 	/**
@@ -609,7 +414,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		// 等额本息需要根据还款情况重新生成还款计划，所以这种还款方式重修还款计划时需要以原始的还款计划为基础结构；且还款冲销时需要同时更新cc的静态还款计划
 		if (account.paymentMethod.equals(PaymentMethod.MSV) || account.paymentMethod.equals(PaymentMethod.MSF)
 				|| account.paymentMethod.equals(PaymentMethod.MSB)) {
-			paymentPlan = getPaymentPlan(acctSeq);
+			paymentPlan = paymentPlanHelperService.getPaymentPlan(acctSeq);
 		}
 		if (paymentPlan == null) {
 			// 固定日还款
@@ -657,7 +462,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 		paymentPlan.setProdAcctParamDesc(account.description);
 
 		// 原始还款计划每期应还本金，用于计算是否提前还款。
-		Map<Integer, BigDecimal> regPrincipalsMap = new HashMap<Integer, BigDecimal>();
+		Map<Integer, BigDecimal> regPrincipalsMap = new HashMap<>();
 		// 还款计划明细，按期保存的计划明细，用于后面逻辑计算
 		Map<Integer, PaymentPlanDetail> detailsMap = paymentPlan.getDetailsMap();
 
@@ -683,7 +488,7 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 
 		// 每期的利息余额-按子账户为维度分别统计应计利息，四舍五入保留两位小数后，再相加汇总到当前一期的应还利息上，与结息步骤保持一致，否则会出现误差。
 		// 例如：两个子账户应计利息分别为49.31506,如果先相加，再四舍五入保留两位小数。与先四舍五入保留两位小数再相加，会相差1分钱。
-		Map<Integer, BigDecimal> intAmts = new HashMap<Integer, BigDecimal>();
+		Map<Integer, BigDecimal> intAmts = new HashMap<>();
 		// 溢缴款余额
 		BigDecimal paymAmt = BigDecimal.ZERO;
 		// 当前贷款期数(从0开始，每到一期结息日的时候增加1，最大值为贷款总期数。所以该值表示的含义是当前这期的结束，期数+1表示从下期开始到下期结束的任意时间点。)
@@ -749,10 +554,12 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				// 提前还款当期计息标准为按日
 				if(PrePaySettlementType.D.equals(account.advanceType)){
 					// 先确定起息日
-					LocalDate startDate = calcStartDate(cactSubAcct, cactAccount, subAcct, account);
-					LocalDate endDate = provider7x24.getCurrentDate();
+					LocalDate startDate = accrualInterestDateCalculationService.calcStartDate(
+							cactSubAcct.getLastComputingInterestDate(), cactSubAcct.getSubAcctType(),
+							cactAccount, subAcct, account);
 					// 获取利率表
-					List<InterestTable> tables = newInterestService.retrieveInterestTable(cactAccount, cactSubAcct, account, subAcct, endDate);
+					List<InterestTable> tables = newInterestService.retrieveInterestTable(cactAccount, cactSubAcct,
+							account, subAcct, provider7x24.getCurrentDate());
 					// 计算利息的金额基数
 					BigDecimal principalAmount = provider7x24.getBalance(cactSubAcct);
 					// 等本等息类型的特殊逻辑：用全部贷款本金计算
@@ -761,7 +568,9 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 					}
 					// 下面的逻辑是按日计息，还款的时候也会收当日的利息，未满结息周期的，当期内的已过天数按日息来处理
 					List<RateCalcMethod> dailyRates = newInterestService.convertRates(Interval.D, tables.get(0));
-					endDate = calcEndDate(cactAccount, cactSubAcct, paymentPlan, endDate, tables);
+					LocalDate endDate = accrualInterestDateCalculationService.calcEndDate(cactSubAcct.getSubAcctType(),
+							paymentPlanHelperService.getLastPaymentPlanDate(paymentPlan), provider7x24.getCurrentDate(),
+							tables.get(0).cycleBase, tables.get(0).cycleBaseMult);
 					// 不满整计息周期的剩余天数,乘上日利率得出利息
 					// 为了解决还款冲销差0.01的情况，先算出endDate前一天的利息；再加一天利息来计算，确保于六位转两位四舍五入后的差异与批量计息的逻辑一致
 					// endDate表示闭区间，所以直接是这个days的值
@@ -802,12 +611,14 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 			
 			// ======================修正还款计划明细
 			// 修正应还罚息
-			if (cactSubAcct.getSubAcctType().equals("PNIT") && cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
+			if (cactSubAcct.getSubAcctType().equals(SubAcctType.DefaultSubAcctType.PNIT.toString())
+					&& cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
 				detailsMap.get(period).setPenalizedAmt(detailsMap.get(period).getPenalizedAmt().add(cactSubAcct.getCurrBal()));
 			}
 			
 			// 统计剩余未还本金总额
-			if (cactSubAcct.getSubAcctType().equals("LBAL") && cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
+			if (cactSubAcct.getSubAcctType().equals(SubAcctType.DefaultSubAcctType.LBAL.toString())
+					&& cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
 				//修正应还本金；还款方式为等额本息类型时，由于前面逻辑对该类型的"LBAL"本金已清零，这里进行重新计算修正
 				if (account.paymentMethod == PaymentMethod.MSV || account.paymentMethod.equals(PaymentMethod.MSF)
 						|| account.paymentMethod.equals(PaymentMethod.MSB)) {
@@ -815,28 +626,27 @@ public class PaymentPlanServiceImpl implements PaymentPlanService {
 				}
 				totalLoanAndLbalPrincipal = totalLoanAndLbalPrincipal.add(cactSubAcct.getCurrBal());
 			}
-			if (cactSubAcct.getSubAcctType().equals("LOAN") && cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
+			if (cactSubAcct.getSubAcctType().equals(SubAcctType.DefaultSubAcctType.LOAN.toString())
+					&& cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
 				totalLoanAndLbalPrincipal = totalLoanAndLbalPrincipal.add(cactSubAcct.getCurrBal());
 				loanPrincipal = loanPrincipal.add(cactSubAcct.getCurrBal());
 			}
 
 			// 修正应还利息
-			if (cactSubAcct.getSubAcctType().equals("INTE") && cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
+			if (cactSubAcct.getSubAcctType().equals(SubAcctType.DefaultSubAcctType.INTE.toString())
+					&& cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
 				detailsMap.get(period).setInterestAmt(detailsMap.get(period).getInterestAmt().add(cactSubAcct.getCurrBal()));
 			}
 
-			// 修正应还费用
-//			if (cactSubAcct.getSubAcctType().equals("SFEE") && cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) >= 0) {
-//				detailsMap.get(period).setFeeAmt(detailsMap.get(period).getFeeAmt().add(cactSubAcct.getCurrBal()));
-//			}
-			
 			// 存下溢缴款，供后面逻辑冲销溢缴款
-			if (cactSubAcct.getSubAcctType().equals("PAYM") && cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) < 0) {
+			if (cactSubAcct.getSubAcctType().equals(SubAcctType.DefaultSubAcctType.PAYM.toString())
+					&& cactSubAcct.getCurrBal().compareTo(BigDecimal.ZERO) < 0) {
 				paymAmt = cactSubAcct.getCurrBal().abs();
 			}
 			
 			// 对"LOAN"、"PAYM"以外余额成分的当期余额（不包括未结部分）修正到各期的待冲销余额MAP(“余额成分->金额(K->V)) : acctTypeAndAmtMap
-			if ((!cactSubAcct.getSubAcctType().equals("LOAN")) && (!cactSubAcct.getSubAcctType().equals("PAYM"))) {
+			if (!cactSubAcct.getSubAcctType().equals(SubAcctType.DefaultSubAcctType.LOAN.toString())
+					&& !cactSubAcct.getSubAcctType().equals(SubAcctType.DefaultSubAcctType.PAYM.toString())) {
 				if (detailsMap.get(period).getAcctTypeAndAmtMap().get(cactSubAcct.getSubAcctType()) != null) {
 					detailsMap.get(period).getAcctTypeAndAmtMap().put(cactSubAcct.getSubAcctType(), detailsMap.get(period).getAcctTypeAndAmtMap().get(cactSubAcct.getSubAcctType()).add(cactSubAcct.getCurrBal()));
 				}

@@ -17,7 +17,7 @@
 								<ref bean="cc1800P10TransactionPosting"/>
 				  				<ref bean="cc1800P15MoveDue"/>
 				  				<ref bean="cc1800P16UpdateAgeCode"/>  
-								<ref bean="cc1800P22InterestAccrualCurr"/>
+								<ref bean="cc1800P22InterestReceivable"/>
 								<ref bean="cc1800P25InterestCheckWaive"/>
 								<ref bean="cc1800P28GenerateOverLimitFee"/>
 								<ref bean="cc1800P31GenerateLateChargeFee"/>

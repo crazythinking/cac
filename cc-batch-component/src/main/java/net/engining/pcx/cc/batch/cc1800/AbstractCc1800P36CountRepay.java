@@ -1,20 +1,6 @@
 package net.engining.pcx.cc.batch.cc1800;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.joda.time.LocalDate;
-import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-
 import com.querydsl.jpa.impl.JPAQueryFactory;
-
 import net.engining.gm.infrastructure.enums.BusinessType;
 import net.engining.gm.infrastructure.enums.Interval;
 import net.engining.pcx.cc.infrastructure.shared.enums.PostTxnTypeDef;
@@ -35,10 +21,27 @@ import net.engining.pcx.cc.process.service.PaymentPlanService;
 import net.engining.pcx.cc.process.service.account.NewComputeService;
 import net.engining.pcx.cc.process.service.account.NewPostService;
 import net.engining.pcx.cc.process.service.account.PostDetail;
+import net.engining.pcx.cc.process.service.support.CommonLogicUtils;
 import net.engining.pg.parameter.ParameterFacility;
+import org.joda.time.LocalDate;
+import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 
-public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
+/**
+ * 计算当期应还本金的抽象类，只在结息日，业务类型为CC或者BL的才计算应收本金，用于结转本金操作
+ *
+ * @author Eric Lu
+ */
+public abstract class AbstractCc1800P36CountRepay implements ItemProcessor<Cc1800IPostingInfo, Cc1800IPostingInfo> {
 		
 	@Autowired
 	private ParameterFacility parameterFacility;
@@ -63,7 +66,7 @@ public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc180
 	
 	private boolean daily;
 	
-	protected Cc1800P36AbstractCountRepay(boolean daily)
+	protected AbstractCc1800P36CountRepay(boolean daily)
 	{
 		this.daily = daily;
 	}
@@ -84,50 +87,35 @@ public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc180
 				if(batchDate.isEqual(interestDate))
 				{
 					//业务类型是循环信用账户或者小额贷款，并且当前期数大于等于0,小于等于总期数
-					if((cc1800IAccountInfo.getCactAccount().getBusinessType() == BusinessType.BL
-							|| cc1800IAccountInfo.getCactAccount().getBusinessType() == BusinessType.CC)
-						&& cc1800IAccountInfo.getCactAccount().getCurrentLoanPeriod()>= 0
-						&& cc1800IAccountInfo.getCactAccount().getCurrentLoanPeriod() < cc1800IAccountInfo.getCactAccount().getTotalLoanPeriod()
-//							|| cc1800IAccountInfo.getCactAccount().getBusinessType() == BusinessType.CL
-							){
+					boolean flag = (cc1800IAccountInfo.getCactAccount().getBusinessType() == BusinessType.BL
+										|| cc1800IAccountInfo.getCactAccount().getBusinessType() == BusinessType.CC)
+									&& cc1800IAccountInfo.getCactAccount().getCurrentLoanPeriod()>= 0
+									&& cc1800IAccountInfo.getCactAccount().getCurrentLoanPeriod() < cc1800IAccountInfo.getCactAccount().getTotalLoanPeriod();
+					if(flag){
 						
 						BigDecimal repayAmt = countRepayAmt(cc1800IAccountInfo);
 						//结转金额不为0，才入账。
 						if ( repayAmt.compareTo(BigDecimal.ZERO) > 0 )
 						{ 
 							
-							if( !isAlreadlyLbal(cc1800IAccountInfo) ) continue ;
+							if( !isAlreadyLbal(cc1800IAccountInfo) ) {
+								continue ;
+							}
 							//转入贷款应还本金子账户
 							AcctModel acctModel = cc1800IAccountInfo.getAcctModel();
 							CactAccount acct = cc1800IAccountInfo.getCactAccount();
 							Account acctParam = newComputeService.retrieveAccount(acct);
 							Map<SysTxnCd, String> txnCdMap = acctParam.sysTxnCdMapping;
-							PostDetail inDetail = new PostDetail();
-							inDetail.setTxnDate(now);
-							inDetail.setTxnTime(now);
-							inDetail.setPostTxnType(PostTxnTypeDef.M);
-							inDetail.setPostCode(txnCdMap.get(SysTxnCd.S19));
-							inDetail.setTxnAmt(repayAmt);
-							inDetail.setPostAmt(repayAmt);
-							inDetail.setTxnCurrCd(acct.getCurrCd());
-							inDetail.setPostCurrCd(acct.getCurrCd());
-							
+							PostDetail inDetail = CommonLogicUtils.setupPostDetail4PostTxnTypeDef(repayAmt, acct, txnCdMap.get(SysTxnCd.S19), now, PostTxnTypeDef.M);
+
 							newPostService.postToAccount(acctModel, batchDate, inDetail, false, 0);
 
 							
 							//从贷款剩余本金子账户转出
 							// 取剩余本金子账户序号,填充至交易记录中
 							PostCode outPostCode = parameterFacility.loadParameter(PostCode.class, txnCdMap.get(SysTxnCd.S18));
-							PostDetail outDetail = new PostDetail();
-							outDetail.setTxnDate(now);
-							outDetail.setTxnTime(now);
-							outDetail.setPostTxnType(PostTxnTypeDef.M);
-							outDetail.setPostCode(outPostCode.postCode);
-							outDetail.setTxnAmt(repayAmt);
-							outDetail.setPostAmt(repayAmt);
-							outDetail.setTxnCurrCd(acct.getCurrCd());
-							outDetail.setPostCurrCd(acct.getCurrCd());
-							
+							PostDetail outDetail = CommonLogicUtils.setupPostDetail4PostTxnTypeDef(repayAmt, acct, outPostCode.postCode, now, PostTxnTypeDef.M);
+
 							Integer subAcctId = null; 
 							for (CactSubAcct cactSubAcct : cc1800IAccountInfo.getCactSubAccts())
 							{
@@ -148,7 +136,6 @@ public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc180
 	
 	/**
 	 * 计算应还本金
-	 * @param acctInfo
 	 */
 	private BigDecimal countRepayAmt(Cc1800IAccountInfo cc1800IAccountInfo){
 		
@@ -164,10 +151,12 @@ public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc180
 				break;
 			}		
 		}
-		if(subAcct == null)
-			return BigDecimal.ZERO;//已还清
-			//throw new IllegalArgumentException("无效的子账户");
-		
+
+		//已还清
+		if(subAcct == null) {
+			return BigDecimal.ZERO;
+		}
+
 		/*//获取账户参数
 		Account acctParam = newComputeService.retrieveAccount(acctInfo);*/
 		//获取利率参数
@@ -236,7 +225,7 @@ public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc180
 	 * @param cc1800IAccountInfo
 	 * @return
 	 */
-	private boolean isAlreadlyLbal(Cc1800IAccountInfo cc1800IAccountInfo){
+	private boolean isAlreadyLbal(Cc1800IAccountInfo cc1800IAccountInfo){
 		//判断是否是批量中产生的还款数据
 		QCactEndChangeAcct qCactEndChangeAcct = QCactEndChangeAcct.cactEndChangeAcct;
 		Long n1 = new JPAQueryFactory(em)
@@ -247,7 +236,11 @@ public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc180
 						qCactEndChangeAcct.txnDate.eq( businessDate )
 						)
 				.fetchCount();
-		if(n1 == 0)  return true ;//没有产生数据，则返回为true,可以做本金余额成分生成
+
+		//没有产生数据，则返回为true,可以做本金余额成分生成
+		if(n1 == 0) {
+			return true ;
+		}
 		
 		//在批量的时候，到期日做还款，会导致余额成分多一笔，故在批量的时候判断当期到期本金的余额成分是否已经生成
 		QCactSubAcct qCactSubAcct = QCactSubAcct.cactSubAcct;
@@ -260,8 +253,12 @@ public abstract class Cc1800P36AbstractCountRepay implements ItemProcessor<Cc180
 						qCactSubAcct.stmtHist.eq(0)
 						)
 				.fetchCount();
-		if(n2 == 0)  return true ;//没有产生数据，则返回为true,可以做本金余额成分生成
-		
+
+		//没有产生数据，则返回为true,可以做本金余额成分生成
+		if(n2 == 0) {
+			return true ;
+		}
+
 		return false ;
 	}
 }

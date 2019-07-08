@@ -18,20 +18,23 @@ import net.engining.pcx.cc.process.model.AcctModel;
  *
  */
 public class Cc1800IPostingInfo {
+
 	/**
+	 * TODO 从性能考虑，这里要初始化固定大小的Map
 	 * Key:Integer-AcctNo;
 	 */
-	private Map< Integer, List<Cc1800IAccountInfo>> accountList = new HashMap<Integer, List<Cc1800IAccountInfo>>();
+	private Map< Integer, List<Cc1800IAccountInfo>> accountList = new HashMap<>();
 
 	private String org;
 	
 	private String custId;
 	
 	/**
+	 * TODO 从性能考虑，这里要初始化固定大小的Map
 	 * acctSeq => AcctModel的映射
 	 */
 	private Map<Integer, AcctModel> acctModelMap = Maps.newHashMap();
-	
+
 	private Map<Integer, Object> customizerInfoMap;
 	
 	

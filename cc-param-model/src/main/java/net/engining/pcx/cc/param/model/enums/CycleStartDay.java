@@ -15,7 +15,8 @@ public enum CycleStartDay{
 	/**
 	 * 固定日
 	 */
-	Y, 
+	Y,
+
 	/**
 	 * 建账日
 	 */

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @StepScope
-public class Cc1800P36CountRepayAmt4Daily extends Cc1800P36AbstractCountRepay {
+public class Cc1800P36CountRepayAmt4Daily extends AbstractCc1800P36CountRepay {
 
 	protected Cc1800P36CountRepayAmt4Daily()
 	{

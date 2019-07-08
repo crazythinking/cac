@@ -7,7 +7,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import net.engining.pcx.cc.process.service.account.PaymentDateCalculationService;
+import net.engining.pcx.cc.process.service.account.date.PaymentDateCalculationServiceInter;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class Cc1800P43GenerateStatement implements ItemProcessor<Cc1800IPostingI
 	private BlockCodeUtils blockCodeUtils;
 
 	@Autowired
-	private PaymentDateCalculationService paymentDateCalculationService;
+	private PaymentDateCalculationServiceInter paymentDateCalculationService;
 	
 	/**
 	 * 最小还款额及账龄计算业务组件

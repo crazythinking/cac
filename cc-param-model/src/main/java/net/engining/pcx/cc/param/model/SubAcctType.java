@@ -10,9 +10,41 @@ import net.engining.pg.support.meta.PropertyInfo;
 public class SubAcctType implements Serializable {
 
 	private static final long serialVersionUID = -6405896117422664294L;
-	
-	public enum SubAcctTypeDef{
-		LOAN, LBAL, INTE, PNIT, PAYM, SFEE
+
+	/**
+	 * 默认余额成分类型，不做扩展，子类自行定义新的枚举
+	 */
+	public enum DefaultSubAcctType{
+
+		/**
+		 * 未到期本金
+		 */
+		LOAN,
+
+		/**
+		 * 到期本金
+		 */
+		LBAL,
+
+		/**
+		 * 到期利息
+		 */
+		INTE,
+
+		/**
+		 * 已结转罚息
+		 */
+		PNIT,
+
+		/**
+		 * 溢缴款
+		 */
+		PAYM,
+
+		/**
+		 * 通用记账费用
+		 */
+		SFEE
 	}
 
 	/**
